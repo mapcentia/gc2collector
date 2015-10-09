@@ -101,7 +101,7 @@ q:after, q:before {
 }
 
 .x-tree-node-collapsed .x-tree-node-icon, .x-tree-node-expanded .x-tree-node-icon {
-    background-image: url(/gc2collector/js/bootstrap/img/glyphicons-halflings.png) !important;
+    background-image: url(../js/bootstrap/img/glyphicons-halflings.png) !important;
     display: inline-block;
     width: 14px;
     height: 14px;
@@ -120,7 +120,7 @@ q:after, q:before {
 }
 
 .x-tree-no-lines .x-tree-elbow-end-minus, .x-tree-no-lines .x-tree-elbow-end-plus, .x-tree-no-lines .x-tree-elbow-minus, .x-tree-no-lines .x-tree-elbow-plus {
-    background-image: url(/gc2collector/js/bootstrap/img/glyphicons-halflings.png) !important;
+    background-image: url(../js/bootstrap/img/glyphicons-halflings.png) !important;
     display: inline-block;
     width: 14px;
     height: 14px;
