@@ -13,11 +13,10 @@ Ext.BLANK_IMAGE_URL = "js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
 
 Ext.Ajax.withCredentials = true;
-
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools;
+var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools, qstore = [], queryWin;
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
-    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single;
+    var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single, createColumns;
     layerBeingEditing = layerName;
     layerBeingEditingGeomField = geomField;
     try {
@@ -31,17 +30,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     } catch (e) {
 
     }
-    $.ajax({
-        url: host + '/controllers/table/columns/' + layerName,
-        async: false,
-        dataType: 'json',
-        type: 'GET',
-        xhrFields: {
-            withCredentials: true
-        },
-        success: function (data, textStatus, http) {
+    createColumns = function (data) {
+            console.log(data)
             var response = data, validProperties = true;
-            // JSON
             fieldsForStore = response.forStore;
             columnsForGrid = response.forGrid;
             type = response.type;
@@ -81,216 +72,240 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 }
             }
         }
-    });
-    if (type === "Point") {
-        handlerType = OpenLayers.Handler.Point;
-    }
-    else if (type === "Polygon") {
-        handlerType = OpenLayers.Handler.Polygon;
-    }
-    else if (type === "Path") {
-        handlerType = OpenLayers.Handler.Path;
-    }
-    var rules = {
-        rules: [
-            new OpenLayers.Rule({
-                filter: new OpenLayers.Filter.Comparison({
-                    type: OpenLayers.Filter.Comparison.NOT_EQUAL_TO,
-                    property: "gc2_version_end_date",
-                    value: 'null'
+    var martin = function(){
+        if (type === "Point") {
+            handlerType = OpenLayers.Handler.Point;
+        }
+        else if (type === "Polygon") {
+            handlerType = OpenLayers.Handler.Polygon;
+        }
+        else if (type === "Path") {
+            handlerType = OpenLayers.Handler.Path;
+        }
+        var rules = {
+            rules: [
+                new OpenLayers.Rule({
+                    filter: new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.NOT_EQUAL_TO,
+                        property: "gc2_version_end_date",
+                        value: 'null'
+                    }),
+                    symbolizer: {
+                        fillColor: "#000000",
+                        fillOpacity: 0.0,
+                        strokeColor: "#FF0000",
+                        strokeWidth: 2,
+                        strokeDashstyle: "dash",
+                        strokeOpacity: 0.7,
+                        graphicZIndex: 1
+                    }
                 }),
-                symbolizer: {
+                new OpenLayers.Rule({
+                    filter: new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: "gc2_version_end_date",
+                        value: null
+                    }),
+                    symbolizer: {
+                        fillColor: "#000000",
+                        fillOpacity: 0.0,
+                        strokeColor: "#0000FF",
+                        strokeWidth: 3,
+                        strokeOpacity: 0.7,
+                        graphicZIndex: 3,
+                        strokeDashstyle: "solid"
+                    }
+                })
+            ]
+        };
+
+        var styleMap = new OpenLayers.StyleMap({
+            "default": new OpenLayers.Style({
                     fillColor: "#000000",
                     fillOpacity: 0.0,
-                    strokeColor: "#FF0000",
-                    strokeWidth: 2,
-                    strokeDashstyle: "dash",
-                    strokeOpacity: 0.7,
-                    graphicZIndex: 1
-                }
-            }),
-            new OpenLayers.Rule({
-                filter: new OpenLayers.Filter.Comparison({
-                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                    property: "gc2_version_end_date",
-                    value: null
-                }),
-                symbolizer: {
-                    fillColor: "#000000",
-                    fillOpacity: 0.0,
+                    pointRadius: 5,
                     strokeColor: "#0000FF",
                     strokeWidth: 3,
                     strokeOpacity: 0.7,
-                    graphicZIndex: 3,
-                    strokeDashstyle: "solid"
+                    graphicZIndex: 3
+
+                },
+                rules
+            ),
+            temporary: new OpenLayers.Style({
+                    fillColor: "#FFFFFF",
+                    fillOpacity: 0.7,
+                    pointRadius: 10,
+                    strokeColor: "#0000FF",
+                    strokeWidth: 1,
+                    strokeOpacity: 0.7,
+                    graphicZIndex: 1
+                }
+            ),
+            select: new OpenLayers.Style({
+                    fillColor: "#000000",
+                    fillOpacity: 0.2,
+                    pointRadius: 20,
+                    strokeColor: "#0000FF",
+                    strokeWidth: 3,
+                    strokeOpacity: 1,
+                    graphicZIndex: 3
+                }, rules
+            )
+        });
+
+        layer = new OpenLayers.Layer.Vector("vector", {
+            strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
+            protocol: new OpenLayers.Protocol.WFS.v1_0_0({
+                url: host + "/wfs/" + (subUser ? subUser + "@" + screenName : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
+                version: "1.0.0",
+                featureType: layerName,
+                featureNS: "http://mapcentia.com/" + screenName,
+                featurePrefix: screenName,
+                srsName: "EPSG:900913",
+                geometryName: geomField, // must be dynamamic
+                defaultFilter: wfsFilter
+            }),
+            styleMap: styleMap
+        });
+        map.addLayers([layer]);
+
+        layer.events.register("loadend", layer, function () {
+            var count = layer.features.length;
+            window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
+            if (layer.features.length > 0) {
+                map.zoomToExtent(layer.getDataExtent());
+            }
+            if (singleEditing) {
+                setTimeout(function () {
+                    map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
+                }, 600);
+                singleEditing = false;
+            }
+        });
+        layer.events.register("loadstart", layer, function () {
+            //App.setAlert(App.STATUS_OK, "Start loading...");
+        });
+
+        drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
+            featureAdded: onInsert,
+            handlerOptions: {
+                multi: multi,
+                handlerOptions: {
+                    holeModifier: "altKey"
+                }
+            }
+        });
+
+        wfsTools[0].control = drawControl;
+        Ext.iterate(qstore, function (v) {
+            v.reset();
+        });
+        queryWin.hide();
+
+        map.addControl(drawControl);
+
+        modifyControl = new OpenLayers.Control.ModifyFeature(layer, {
+            vertexRenderIntent: 'temporary',
+            displayClass: 'olControlModifyFeature'
+        });
+        map.addControl(modifyControl);
+        modifyControl.activate();
+        //wfsTools[0].control.activate();
+
+        sm = new GeoExt.grid.FeatureSelectionModel({
+            selectControl: modifyControl.selectControl,
+            singleSelect: true,
+            listeners: {
+                rowselect: function (sm, row, rec) {
+                    attributeForm.form.enable();
+                    try {
+                        attributeForm.form.getForm().loadRecord(rec);
+                    } catch (e) {
+                    }
+                },
+                rowdeselect: function () {
+                    attributeForm.form.disable();
+                }
+            }
+        });
+
+        store = new GeoExt.data.FeatureStore({
+            proxy: new GeoExt.data.ProtocolProxy({
+                protocol: layer.protocol
+            }),
+            fields: fieldsForStore,
+            layer: layer,
+            featureFilter: new OpenLayers.Filter({
+                evaluate: function (feature) {
+                    return feature.state !== OpenLayers.State.DELETE;
                 }
             })
-        ]
-    };
+        });
 
-    var styleMap = new OpenLayers.StyleMap({
-        "default": new OpenLayers.Style({
-                fillColor: "#000000",
-                fillOpacity: 0.0,
-                pointRadius: 5,
-                strokeColor: "#0000FF",
-                strokeWidth: 3,
-                strokeOpacity: 0.7,
-                graphicZIndex: 3
-
+        grid = new Ext.grid.EditorGridPanel({
+            id: "gridpanel",
+            region: "center",
+            disabled: false,
+            viewConfig: {
+                forceFit: true
             },
-            rules
-        ),
-        temporary: new OpenLayers.Style({
-                fillColor: "#FFFFFF",
-                fillOpacity: 0.7,
-                pointRadius: 5,
-                strokeColor: "#0000FF",
-                strokeWidth: 1,
-                strokeOpacity: 0.7,
-                graphicZIndex: 1
-            }
-        ),
-        select: new OpenLayers.Style({
-                fillColor: "#000000",
-                fillOpacity: 0.2,
-                pointRadius: 8,
-                strokeColor: "#0000FF",
-                strokeWidth: 3,
-                strokeOpacity: 1,
-                graphicZIndex: 3
-            }, rules
-        )
-    });
-
-    layer = new OpenLayers.Layer.Vector("vector", {
-        strategies: [new OpenLayers.Strategy.Fixed(), saveStrategy],
-        protocol: new OpenLayers.Protocol.WFS.v1_0_0({
-            url: host + "/wfs/" + (subUser ? subUser + "@" + screenName : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
-            version: "1.0.0",
-            featureType: layerName,
-            featureNS: "http://mapcentia.com/" + screenName,
-            featurePrefix: screenName,
-            srsName: "EPSG:900913",
-            geometryName: geomField, // must be dynamamic
-            defaultFilter: wfsFilter
-        }),
-        styleMap: styleMap
-    });
-    map.addLayers([layer]);
-
-    layer.events.register("loadend", layer, function () {
-        var count = layer.features.length;
-        window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
-        if (layer.features.length > 0) {
-            map.zoomToExtent(layer.getDataExtent());
-        }
-        if (singleEditing) {
-            setTimeout(function () {
-                map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
-            }, 600);
-            singleEditing = false;
-        }
-    });
-    layer.events.register("loadstart", layer, function () {
-        //App.setAlert(App.STATUS_OK, "Start loading...");
-    });
-
-    drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
-        featureAdded: onInsert,
-        handlerOptions: {
-            multi: multi,
-            handlerOptions: {
-                holeModifier: "altKey"
-            }
-        }
-    });
-
-    wfsTools[0].control = drawControl;
-    map.addControl(drawControl);
-    modifyControl = new OpenLayers.Control.ModifyFeature(layer, {
-        vertexRenderIntent: 'temporary',
-        displayClass: 'olControlModifyFeature'
-    });
-    map.addControl(modifyControl);
-    modifyControl.activate();
-    sm = new GeoExt.grid.FeatureSelectionModel({
-        selectControl: modifyControl.selectControl,
-        singleSelect: true,
-        listeners: {
-            rowselect: function (sm, row, rec) {
-                attributeForm.form.enable();
-                try {
-                    attributeForm.form.getForm().loadRecord(rec);
-                } catch (e) {
+            store: store,
+            listeners: {
+                afteredit: function (e) {
+                    var feature = e.record.get("feature");
+                    if (feature.state !== OpenLayers.State.INSERT) {
+                        feature.state = OpenLayers.State.UPDATE;
+                    }
                 }
             },
-            rowdeselect: function () {
-                attributeForm.form.disable();
-            }
-        }
-    });
 
-    store = new GeoExt.data.FeatureStore({
-        proxy: new GeoExt.data.ProtocolProxy({
-            protocol: layer.protocol
-        }),
-        fields: fieldsForStore,
-        layer: layer,
-        featureFilter: new OpenLayers.Filter({
-            evaluate: function (feature) {
-                return feature.state !== OpenLayers.State.DELETE;
-            }
-        })
-    });
+            sm: sm,
+            cm: new Ext.grid.ColumnModel({
+                defaults: {
+                    sortable: true,
+                    editor: {
+                        xtype: "textfield"
+                    }
+                },
+                columns: columnsForGrid
+            })/*,
+             bbar: [new Ext.PagingToolbar({
+             pageSize: 2,
+             store: store,
+             displayInfo: true,
+             displayMsg: 'Features {0} - {1} of {2}',
+             emptyMsg: "No features"
+             })]*/
+        });
 
-    grid = new Ext.grid.EditorGridPanel({
-        id: "gridpanel",
-        region: "center",
-        disabled: false,
-        viewConfig: {
-            forceFit: true
+        var activeTab = Ext.getCmp("mainTabs").getActiveTab();
+        Ext.getCmp("mainTabs").activate(3);
+        south.add(grid);
+        gridPanel = Ext.getCmp("gridpanel");
+        south.doLayout();
+        Ext.getCmp("mainTabs").activate(activeTab);
+        Ext.getCmp('editcreatebutton').toggle(false);
+        Ext.getCmp('editcreatebutton').setDisabled(false);
+        Ext.getCmp('editdeletebutton').setDisabled(false);
+        Ext.getCmp('editsavebutton').setDisabled(false);
+        Ext.getCmp('editstopbutton').setDisabled(false);
+
+    }
+
+    // TODO check localStore
+    $.ajax({
+        url: host + '/controllers/table/columns/' + layerName,
+        dataType: 'json',
+        type: 'GET',
+        xhrFields: {
+            withCredentials: true
         },
-        store: store,
-        listeners: {
-            afteredit: function (e) {
-                var feature = e.record.get("feature");
-                if (feature.state !== OpenLayers.State.INSERT) {
-                    feature.state = OpenLayers.State.UPDATE;
-                }
-            }
-        },
-
-        sm: sm,
-        cm: new Ext.grid.ColumnModel({
-            defaults: {
-                sortable: true,
-                editor: {
-                    xtype: "textfield"
-                }
-            },
-            columns: columnsForGrid
-        })/*,
-         bbar: [new Ext.PagingToolbar({
-         pageSize: 2,
-         store: store,
-         displayInfo: true,
-         displayMsg: 'Features {0} - {1} of {2}',
-         emptyMsg: "No features"
-         })]*/
+        success: function(response){
+            createColumns(response);
+            martin();
+        }
     });
-
-    var activeTab = Ext.getCmp("mainTabs").getActiveTab();
-    Ext.getCmp("mainTabs").activate(3);
-    south.add(grid);
-    gridPanel = Ext.getCmp("gridpanel");
-    south.doLayout();
-    Ext.getCmp("mainTabs").activate(activeTab);
-    Ext.getCmp('editcreatebutton').toggle(false);
-    Ext.getCmp('editcreatebutton').setDisabled(false);
-    Ext.getCmp('editdeletebutton').setDisabled(false);
-    Ext.getCmp('editsavebutton').setDisabled(false);
-    Ext.getCmp('editstopbutton').setDisabled(false);
 }
 $(document).ready(function () {
     'use strict';
@@ -313,8 +328,8 @@ $(document).ready(function () {
     gc2.on("dblclick", function (e) {
         clicktimer = undefined;
     });
-    var qstore = [];
-    var queryWin = new Ext.Window({
+
+    queryWin = new Ext.Window({
         title: "Query result",
         modal: true,
         border: false,
@@ -369,7 +384,6 @@ $(document).ready(function () {
                 layers = gc2.getVisibleLayers().split(";");
                 Ext.getCmp("queryTabs").removeAll();
                 $.each(layers, function (index, value) {
-                    console.log(metaDataKeys);
                     var isEmpty = true;
                     var srid = metaDataKeys[value.split(".")[1]].srid;
                     var pkey = metaDataKeys[value.split(".")[1]].pkey;
@@ -535,6 +549,8 @@ $(document).ready(function () {
     }
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
     var layers = {};
+
+
     loadTree = function () {
         var treeConfig = [
             {
@@ -542,395 +558,430 @@ $(document).ready(function () {
                 nodeType: "gx_baselayercontainer"
             }
         ];
+        var createTree = function (response) {
+            var groups = [], isBaseLayer;
+            if (response.data !== undefined) {
+                metaData = response;
+                for (var i = 0; i < metaData.data.length; i++) {
+                    metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
+                    if (!metaData.data[i].f_table_title) {
+                        metaData.data[i].f_table_title = metaData.data[i].f_table_name;
+                    }
+                    metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
+                    groups[i] = response.data[i].layergroup;
+                    metaDataRealKeys[response.data[i]._key_] = response.data[i];// Holds the layer extents
+                }
+                var arr = array_unique(groups);
+                for (var u = 0; u < response.data.length; ++u) {
+                    if (response.data[u].baselayer) {
+                        isBaseLayer = true;
+                    } else {
+                        isBaseLayer = false;
+                    }
+                    // Try to remove layer before adding it
+                    try {
+                        cloud.removeTileLayerByName([
+                            [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
+                        ]);
+                    }
+                    catch (e) {
+                    }
+                    layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                        singleTile: false,
+                        visibility: false,
+                        wrapDateLine: false,
+                        tileCached: true,
+                        displayInLayerSwitcher: true,
+                        name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
+                    });
+                }
+                for (i = 0; i < arr.length; ++i) {
+                    var l = [], id;
+                    for (u = 0; u < response.data.length; ++u) {
+                        if (response.data[u].layergroup === arr[i]) {
+                            id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
+                            l.push({
+                                text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
+                                id: id,
+                                leaf: true,
+                                checked: false,
+                                geomField: response.data[u].f_geometry_column,
+                                geomType: response.data[u].type
+                            });
+                        }
+                    }
+                    treeConfig.push({
+                        text: arr[i],
+                        isLeaf: false,
+                        expanded: false,
+                        children: l.reverse()
+                    });
+                }
+            }
+            treeConfig.push(treeConfig.shift());
+            // create the tree with the configuration from above
+            tree = new Ext.tree.TreePanel({
+                id: "tree",
+                border: false,
+                region: "center",
+                split: true,
+                autoScroll: true,
+                root: {
+                    text: 'Ext JS',
+                    children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig.reverse(), true)),
+                    id: 'source'
+                },
+                loader: new Ext.tree.TreeLoader({
+                    applyLoader: false,
+                    uiProviders: {
+                        "layernodeui": LayerNodeUI
+                    }
+                }),
+                listeners: {
+                    click: {
+                        fn: function (e) {
+                            var id = e.id.split('.').join('-'), load = function () {
+                                if (e.leaf === true && e.parentNode.id !== "baselayers") {
+                                    //window.parent.onEditWMSClasses(e.id);
+                                }
+                            };
+                            try {
+                                stopEdit();
+                            }
+                            catch (error) {
+                            }
+                            if (currentId !== e.id) {
+                                /*if (window.parent.Ext.getCmp("layerStylePanel").collapsed) {
+                                 window.parent.Ext.getCmp("layerStylePanel").expand(false);
+                                 load();
+                                 window.parent.Ext.getCmp("layerStylePanel").collapse(false);
+                                 } else {
+                                 load();
+                                 }*/
+                            }
+                            if (e.leaf === true && e.parentNode.id !== "baselayers") {
+                                Ext.getCmp('editlayerbutton').setDisabled(false);
+                                Ext.getCmp('quickdrawbutton').setDisabled(false);
+                            } else if (e.leaf !== true){
+
+                                if (e.expanded) {
+                                    e.collapse();
+                                } else {
+                                    e.expand();
+                                }
+                                } else {
+                                Ext.getCmp('editlayerbutton').setDisabled(true);
+                                Ext.getCmp('quickdrawbutton').setDisabled(true);
+                            }
+                            if (typeof filter.win !== "undefined") {
+                                if (typeof  filter.win.hide !== "undefined") {
+                                    filter.win.hide();
+                                }
+                                filter.win = false;
+                            }
+                            $(".leaf-tools").empty();
+                            $("#" + id).html("<i class='icon-fullscreen btn-gc' style='cursor:pointer' id='ext-" + id + "'></i>");
+                            currentId = e.id;
+                            $("#style-" + id).on("click", function () {
+                                window.parent.Ext.getCmp("layerStylePanel").expand(true);
+                            });
+                            $("#ext-" + id).on("click", function () {
+                                if (metaDataRealKeys[e.id].type === "RASTER") {
+                                    window.parent.App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
+                                    return false;
+                                }
+                                Ext.Ajax.request({
+                                    url: host + '/api/v1/extent/' + screenName + '/' + e.id + '/900913',
+                                    method: 'get',
+                                    headers: {
+                                        'Content-Type': 'application/json; charset=utf-8'
+                                    },
+                                    success: function (response) {
+                                        var ext = Ext.decode(response.responseText).extent;
+                                        cloud.map.zoomToExtent([ext.xmin, ext.ymin, ext.xmax, ext.ymax]);
+                                    },
+                                    failure: function (response) {
+                                        Ext.MessageBox.show({
+                                            title: 'Failure',
+                                            msg: __(Ext.decode(response.responseText).message),
+                                            buttons: Ext.MessageBox.OK,
+                                            width: 400,
+                                            height: 300,
+                                            icon: Ext.MessageBox.ERROR
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    }
+                },
+                rootVisible: false,
+                lines: false
+            });
+            tree.on("checkchange", function (node, checked) {
+                if (node.lastChild === null && node.parentNode.id !== "baselayers") {
+                    // layer id are still only schema.table in map file
+                    var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
+                    if (checked) {
+                        layers[layerId][0].setVisibility(true);
+                    } else {
+                        layers[layerId][0].setVisibility(false);
+                    }
+                }
+            });
+            if (typeof viewport === "undefined") {
+                var navHandler = function(direction){
+                    // This routine could contain business logic required to manage the navigation steps.
+                    // It would call setActiveItem as needed, manage navigation button state, handle any
+                    // branching logic that might be required, handle alternate actions like cancellation
+                    // or finalization, etc.  A complete wizard implementation could get pretty
+                    // sophisticated depending on the complexity required, and should probably be
+                    // done as a subclass of CardLayout in a real-world implementation.
+                    console.log(direction)
+                    Ext.getCmp("cards").setActiveItem(direction)
+                };
+                viewport = new Ext.Viewport({
+                    layout: 'border',
+                    items: [
+                        {
+                            region: "center",
+                            layout: "fit",
+                            border: false,
+                            items:[
+                                new Ext.Panel({
+                                    layout:"card",
+                                    id:"cards",
+                                    activeItem: 0,
+                                    bbar: [
+                                        {
+                                            id: 'move-prev',
+                                            text: 'Back',
+                                            handler: navHandler.createDelegate(this, [-1]),
+                                            disabled: true
+                                        },
+                                        '->', // greedy spacer so that the buttons are aligned to each side
+                                        {
+                                            id: 'move-next',
+                                            text: 'Next',
+                                            handler: function(){
+                                                Ext.getCmp("cards").setActiveItem(1)
+                                            }
+                                        }
+                                    ],
+                                    items:[
+                                        new Ext.TabPanel({
+                                            id: "mainTabs",
+                                            tabPosition: "top",
+                                            unstyled: true,
+                                            layoutOnTabChange: true,
+                                            activeTab: 0,
+                                            resizeTabs: true,
+                                            items: [
+                                                new Ext.Panel({
+                                                    border: false,
+                                                    title: "Layers",
+                                                    tbar: [
+                                                        {
+                                                            text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
+                                                            id: "editlayerbutton",
+                                                            disabled: true,
+                                                            handler: function (thisBtn, event) {
+                                                                try {
+                                                                    stopEdit();
+                                                                }
+                                                                catch (e) {
+                                                                }
+                                                                try {
+                                                                    Ext.getCmp("loaddialog").remove(filter.queryPanel);
+                                                                } catch (e) {
+                                                                }
+                                                                try {
+                                                                    filter.queryPanel.destroy();
+                                                                } catch (e) {
+                                                                }
+                                                                try {
+                                                                    filter.queryPanel = undefined;
+
+                                                                } catch (e) {
+                                                                }
+
+
+                                                                var node = tree.getSelectionModel().getSelectedNode();
+                                                                var id = node.id.split(".");
+                                                                var geomField = node.attributes.geomField;
+                                                                var type = node.attributes.geomType;
+                                                                attributeForm.init(id[1], geomField);
+                                                                if (type === "GEOMETRY" || type === "RASTER") {
+                                                                    Ext.MessageBox.show({
+                                                                        title: 'No geometry type on layer',
+                                                                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                                                        buttons: Ext.MessageBox.OK,
+                                                                        width: 400,
+                                                                        height: 300,
+                                                                        icon: Ext.MessageBox.ERROR
+                                                                    });
+                                                                }
+                                                                else {
+                                                                    var poll = function () {
+                                                                        if (typeof filter.win === "object") {
+                                                                            filter.win.show();
+                                                                            var activeTab = Ext.getCmp("mainTabs").getActiveTab();
+                                                                            Ext.getCmp("mainTabs").activate(2);
+                                                                            Ext.getCmp("attpanel").add(attributeForm.form);
+                                                                            Ext.getCmp("attpanel").doLayout();
+                                                                            Ext.getCmp("mainTabs").activate(activeTab);
+                                                                            attributeForm.form.disable();
+                                                                        }
+                                                                        else {
+                                                                            setTimeout(poll, 10);
+                                                                        }
+                                                                    };
+                                                                    poll();
+                                                                }
+                                                                poll();
+                                                            }
+                                                        },
+                                                        {
+                                                            text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
+                                                            id: "quickdrawbutton",
+                                                            disabled: true,
+                                                            handler: function () {
+                                                                Ext.getCmp("mainTabs").activate(1);
+                                                                var node = tree.getSelectionModel().getSelectedNode();
+                                                                var id = node.id.split(".");
+                                                                var geomField = node.attributes.geomField;
+                                                                var type = node.attributes.geomType;
+                                                                if (type === "GEOMETRY" || type === "RASTER") {
+                                                                    Ext.MessageBox.show({
+                                                                        title: 'No geometry type on layer',
+                                                                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                                                        buttons: Ext.MessageBox.OK,
+                                                                        width: 400,
+                                                                        height: 300,
+                                                                        icon: Ext.MessageBox.ERROR
+                                                                    });
+                                                                    return false;
+                                                                }
+                                                                else {
+                                                                    var filter = new OpenLayers.Filter.Comparison({
+                                                                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                                                        property: "\"dummy\"",
+                                                                        value: "-1"
+                                                                    });
+
+                                                                    attributeForm.init(id[1], geomField);
+                                                                    Ext.getCmp("attpanel").add(attributeForm.form);
+                                                                    attributeForm.form.disable();
+
+                                                                    startWfsEdition(id[1], geomField, filter);
+
+                                                                }
+                                                            }
+                                                        }, '-', {
+                                                            text: "<i class='icon-refresh btn-gc'></i> " + __("Reload"),
+                                                            handler: function () {
+                                                                stopEdit();
+                                                                reLoadTree();
+                                                            }
+                                                        }],
+                                                    items: [
+                                                        new Ext.Panel({
+                                                            border: false,
+                                                            id: "treepanel",
+                                                            style: {
+                                                                height: (Ext.getBody().getViewSize().height - 120) + "px",
+                                                                overflow: "auto"
+                                                            },
+                                                            collapsible: false
+
+                                                        })
+                                                    ]
+                                                }),
+                                                {
+                                                    title: "Map",
+                                                    border: false,
+                                                    id: "mappanel",
+                                                    xtype: "gx_mappanel",
+                                                    map: map,
+                                                    zoom: 5,
+                                                    split: true,
+                                                    tbar: wfsTools
+                                                },
+                                                {
+                                                    title: "Attribut",
+                                                    id: "attpanel",
+                                                    layout: "fit",
+
+                                                },
+                                                {
+                                                    id: "attrtable",
+                                                    title: "Table",
+                                                    layout: "fit",
+                                                    contentEl: "instructions"
+                                                }
+
+                                            ]
+                                        }),
+                                        new Ext.TabPanel({
+                                            html:"ggghhgg"
+                                        })
+                                    ]
+                                })
+                            ]
+                        }
+                    ]
+                });
+
+                if (window.parent.initExtent !== null) {
+                    cloud.map.zoomToExtent(window.parent.initExtent, false);
+                } else {
+                    cloud.map.zoomToMaxExtent();
+                }
+            }
+            else {
+                window.parent.App.setAlert(App.STATUS_NOTICE, __("Layer tree reloaded"));
+            }
+
+            Ext.getCmp("mainTabs").activate(0);
+            Ext.getCmp("mainTabs").activate(1);
+            Ext.getCmp("mainTabs").activate(2);
+            Ext.getCmp("mainTabs").activate(3);
+            Ext.getCmp("mainTabs").activate(0);
+            var west = Ext.getCmp("treepanel");
+            west.remove(tree);
+            west.add(tree);
+            west.doLayout();
+
+            // Last we add the restricted area layer.
+            extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
+                styleMap: new OpenLayers.StyleMap({
+                    "default": new OpenLayers.Style({
+                        fillColor: "#000000",
+                        fillOpacity: 0.0,
+                        pointRadius: 5,
+                        strokeColor: "#ff0000",
+                        strokeWidth: 2,
+                        strokeOpacity: 0.7,
+                        graphicZIndex: 1
+                    })
+                })
+            });
+            /*if (window.parent.extentRestricted) {
+             extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
+             }*/
+            map.addLayers([extentRestrictLayer]);
+        }
+
+        // TODO check localStore
         $.ajax({
             url: host + '/api/v1/meta/' + screenName + '/' + schema,
             dataType: 'json',
             type: 'GET',
-            success: function (response) {
-                var groups = [], isBaseLayer;
-                if (response.data !== undefined) {
-                    metaData = response;
-                    for (var i = 0; i < metaData.data.length; i++) {
-                        metaDataKeys[metaData.data[i].f_table_name] = metaData.data[i];
-                        if (!metaData.data[i].f_table_title) {
-                            metaData.data[i].f_table_title = metaData.data[i].f_table_name;
-                        }
-                        metaDataKeysTitle[metaData.data[i].f_table_title] = metaData.data[i];
-                        groups[i] = response.data[i].layergroup;
-                        metaDataRealKeys[response.data[i]._key_] = response.data[i];// Holds the layer extents
-                    }
-                    var arr = array_unique(groups);
-                    for (var u = 0; u < response.data.length; ++u) {
-                        if (response.data[u].baselayer) {
-                            isBaseLayer = true;
-                        } else {
-                            isBaseLayer = false;
-                        }
-                        // Try to remove layer before adding it
-                        try {
-                            cloud.removeTileLayerByName([
-                                [response.data[u].f_table_schema + "." + response.data[u].f_table_name]
-                            ]);
-                        }
-                        catch (e) {
-                        }
-                        layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
-                            singleTile: false,
-                            visibility: false,
-                            wrapDateLine: false,
-                            tileCached: true,
-                            displayInLayerSwitcher: true,
-                            name: response.data[u].f_table_schema + "." + response.data[u].f_table_name
-                        });
-                    }
-                    for (i = 0; i < arr.length; ++i) {
-                        var l = [], id;
-                        for (u = 0; u < response.data.length; ++u) {
-                            if (response.data[u].layergroup === arr[i]) {
-                                id = response.data[u].f_table_schema + "." + response.data[u].f_table_name + "." + response.data[u].f_geometry_column;
-                                l.push({
-                                    text: ((response.data[u].f_table_title === null || response.data[u].f_table_title === "") ? response.data[u].f_table_name : response.data[u].f_table_title) + " <span style='float:right' class='leaf-tools' id='" + id.split('.').join('-') + "'></span>",
-                                    id: id,
-                                    leaf: true,
-                                    checked: false,
-                                    geomField: response.data[u].f_geometry_column,
-                                    geomType: response.data[u].type
-                                });
-                            }
-                        }
-                        treeConfig.push({
-                            text: arr[i],
-                            isLeaf: false,
-                            expanded: false,
-                            children: l.reverse()
-                        });
-                    }
-                }
-                treeConfig.push(treeConfig.shift());
-                // create the tree with the configuration from above
-                tree = new Ext.tree.TreePanel({
-                    id: "tree",
-                    border: false,
-                    region: "center",
-                    split: true,
-                    autoScroll: true,
-                    root: {
-                        text: 'Ext JS',
-                        children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig.reverse(), true)),
-                        id: 'source'
-                    },
-                    loader: new Ext.tree.TreeLoader({
-                        applyLoader: false,
-                        uiProviders: {
-                            "layernodeui": LayerNodeUI
-                        }
-                    }),
-                    listeners: {
-                        click: {
-                            fn: function (e) {
-                                var id = e.id.split('.').join('-'), load = function () {
-                                    if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                        //window.parent.onEditWMSClasses(e.id);
-                                    }
-                                };
-                                try {
-                                    stopEdit();
-                                }
-                                catch (error) {
-                                }
-                                if (currentId !== e.id) {
-                                    /*if (window.parent.Ext.getCmp("layerStylePanel").collapsed) {
-                                     window.parent.Ext.getCmp("layerStylePanel").expand(false);
-                                     load();
-                                     window.parent.Ext.getCmp("layerStylePanel").collapse(false);
-                                     } else {
-                                     load();
-                                     }*/
-                                }
-                                if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                    Ext.getCmp('editlayerbutton').setDisabled(false);
-                                    Ext.getCmp('quickdrawbutton').setDisabled(false);
-                                } else if (e.leaf !== true){
-
-                                    if (e.expanded) {
-                                        e.collapse();
-                                    } else {
-                                        e.expand();
-                                    }
-                                    console.log(e)
-                                } else {
-                                    Ext.getCmp('editlayerbutton').setDisabled(true);
-                                    Ext.getCmp('quickdrawbutton').setDisabled(true);
-                                }
-                                if (typeof filter.win !== "undefined") {
-                                    if (typeof  filter.win.hide !== "undefined") {
-                                        filter.win.hide();
-                                    }
-                                    filter.win = false;
-                                }
-                                $(".leaf-tools").empty();
-                                $("#" + id).html("<i class='icon-fullscreen btn-gc' style='cursor:pointer' id='ext-" + id + "'></i>");
-                                currentId = e.id;
-                                $("#style-" + id).on("click", function () {
-                                    window.parent.Ext.getCmp("layerStylePanel").expand(true);
-                                });
-                                $("#ext-" + id).on("click", function () {
-                                    if (metaDataRealKeys[e.id].type === "RASTER") {
-                                        window.parent.App.setAlert(App.STATUS_NOTICE, __('You can only zoom to vector layers.'));
-                                        return false;
-                                    }
-                                    Ext.Ajax.request({
-                                        url: host + '/api/v1/extent/' + screenName + '/' + e.id + '/900913',
-                                        method: 'get',
-                                        headers: {
-                                            'Content-Type': 'application/json; charset=utf-8'
-                                        },
-                                        success: function (response) {
-                                            var ext = Ext.decode(response.responseText).extent;
-                                            cloud.map.zoomToExtent([ext.xmin, ext.ymin, ext.xmax, ext.ymax]);
-                                        },
-                                        failure: function (response) {
-                                            Ext.MessageBox.show({
-                                                title: 'Failure',
-                                                msg: __(Ext.decode(response.responseText).message),
-                                                buttons: Ext.MessageBox.OK,
-                                                width: 400,
-                                                height: 300,
-                                                icon: Ext.MessageBox.ERROR
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                        }
-                    },
-                    rootVisible: false,
-                    lines: false
-                });
-                tree.on("checkchange", function (node, checked) {
-                    if (node.lastChild === null && node.parentNode.id !== "baselayers") {
-                        // layer id are still only schema.table in map file
-                        var layerId = node.id.split(".")[0] + "." + node.id.split(".")[1];
-                        if (checked) {
-                            layers[layerId][0].setVisibility(true);
-                        } else {
-                            layers[layerId][0].setVisibility(false);
-                        }
-                    }
-                });
-                if (typeof viewport === "undefined") {
-                    viewport = new Ext.Viewport({
-                        layout: 'border',
-                        items: [
-                            {
-                                region: "center",
-                                layout: "fit",
-                                border: false,
-                                items: [
-                                    new Ext.TabPanel({
-                                        id: "mainTabs",
-                                        tabPosition: "top",
-                                        unstyled: true,
-                                        layoutOnTabChange: true,
-                                        activeTab: 0,
-                                        resizeTabs: true,
-                                        items: [
-                                            new Ext.Panel({
-                                                border: false,
-                                                title: "Layers",
-                                                tbar: [
-                                                    {
-                                                        text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
-                                                        id: "editlayerbutton",
-                                                        disabled: true,
-                                                        handler: function (thisBtn, event) {
-                                                            try {
-                                                                stopEdit();
-                                                            }
-                                                            catch (e) {
-                                                            }
-                                                            try {
-                                                                Ext.getCmp("loaddialog").remove(filter.queryPanel);
-                                                            } catch (e) {
-                                                            }
-                                                            try {
-                                                                filter.queryPanel.destroy();
-                                                            } catch (e) {
-                                                            }
-                                                            try {
-                                                                filter.queryPanel = undefined;
-
-                                                            } catch (e) {
-                                                            }
-
-
-                                                            var node = tree.getSelectionModel().getSelectedNode();
-                                                            var id = node.id.split(".");
-                                                            var geomField = node.attributes.geomField;
-                                                            var type = node.attributes.geomType;
-                                                            attributeForm.init(id[1], geomField);
-                                                            if (type === "GEOMETRY" || type === "RASTER") {
-                                                                Ext.MessageBox.show({
-                                                                    title: 'No geometry type on layer',
-                                                                    msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                                    buttons: Ext.MessageBox.OK,
-                                                                    width: 400,
-                                                                    height: 300,
-                                                                    icon: Ext.MessageBox.ERROR
-                                                                });
-                                                            }
-                                                            else {
-                                                                var poll = function () {
-                                                                    if (typeof filter.win === "object") {
-                                                                        filter.win.show();
-                                                                        var activeTab = Ext.getCmp("mainTabs").getActiveTab();
-                                                                        Ext.getCmp("mainTabs").activate(2);
-                                                                        Ext.getCmp("attpanel").add(attributeForm.form);
-                                                                        Ext.getCmp("attpanel").doLayout();
-                                                                        Ext.getCmp("mainTabs").activate(activeTab);
-                                                                        attributeForm.form.disable();
-                                                                    }
-                                                                    else {
-                                                                        setTimeout(poll, 10);
-                                                                    }
-                                                                };
-                                                                poll();
-                                                            }
-                                                            poll();
-                                                        }
-                                                    },
-                                                    {
-                                                        text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
-                                                        id: "quickdrawbutton",
-                                                        disabled: true,
-                                                        handler: function () {
-                                                            Ext.getCmp("mainTabs").activate(1);
-                                                            var node = tree.getSelectionModel().getSelectedNode();
-                                                            var id = node.id.split(".");
-                                                            var geomField = node.attributes.geomField;
-                                                            var type = node.attributes.geomType;
-                                                            if (type === "GEOMETRY" || type === "RASTER") {
-                                                                Ext.MessageBox.show({
-                                                                    title: 'No geometry type on layer',
-                                                                    msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                                    buttons: Ext.MessageBox.OK,
-                                                                    width: 400,
-                                                                    height: 300,
-                                                                    icon: Ext.MessageBox.ERROR
-                                                                });
-                                                                return false;
-                                                            }
-                                                            else {
-                                                                var filter = new OpenLayers.Filter.Comparison({
-                                                                    type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                                                                    property: "\"dummy\"",
-                                                                    value: "-1"
-                                                                });
-
-                                                                attributeForm.init(id[1], geomField);
-                                                                Ext.getCmp("attpanel").add(attributeForm.form);
-                                                                attributeForm.form.disable();
-                                                                startWfsEdition(id[1], geomField, filter);
-                                                                wfsTools[0].control.activate();
-                                                                Ext.getCmp('editcreatebutton').toggle(true);
-                                                                Ext.iterate(qstore, function (v) {
-                                                                    v.reset();
-                                                                });
-                                                                queryWin.hide();
-                                                            }
-                                                        }
-                                                    }, '-', {
-                                                        text: "<i class='icon-refresh btn-gc'></i> " + __("Reload"),
-                                                        handler: function () {
-                                                            stopEdit();
-                                                            reLoadTree();
-                                                        }
-                                                    }],
-                                                items: [
-                                                    new Ext.Panel({
-                                                        border: false,
-                                                        id: "treepanel",
-                                                        style: {
-                                                            height: (Ext.getBody().getViewSize().height - 120) + "px",
-                                                            overflow: "auto"
-                                                        },
-                                                        collapsible: false
-
-                                                    })
-                                                ]
-                                            }),
-                                            {
-                                                title: "Map",
-                                                border: false,
-                                                id: "mappanel",
-                                                xtype: "gx_mappanel",
-                                                map: map,
-                                                zoom: 5,
-                                                split: true,
-                                                tbar: wfsTools
-                                            },
-                                            {
-                                                title: "Attribut",
-                                                id: "attpanel",
-                                                layout: "fit",
-
-                                            },
-                                            {
-                                                id: "attrtable",
-                                                title: "Table",
-                                                layout: "fit",
-                                                contentEl: "instructions"
-                                            }
-
-                                        ]
-                                    })
-                                ]
-                            },
-
-                        ]
-                    });
-
-                    if (window.parent.initExtent !== null) {
-                        cloud.map.zoomToExtent(window.parent.initExtent, false);
-                    } else {
-                        cloud.map.zoomToMaxExtent();
-                    }
-                }
-                else {
-                    window.parent.App.setAlert(App.STATUS_NOTICE, __("Layer tree reloaded"));
-                }
-
-                Ext.getCmp("mainTabs").activate(0);
-                Ext.getCmp("mainTabs").activate(1);
-                Ext.getCmp("mainTabs").activate(2);
-                Ext.getCmp("mainTabs").activate(3);
-                Ext.getCmp("mainTabs").activate(0);
-                var west = Ext.getCmp("treepanel");
-                west.remove(tree);
-                west.add(tree);
-                west.doLayout();
-
-                // Last we add the restricted area layer.
-                extentRestrictLayer = new OpenLayers.Layer.Vector("extentRestrictLayer", {
-                    styleMap: new OpenLayers.StyleMap({
-                        "default": new OpenLayers.Style({
-                            fillColor: "#000000",
-                            fillOpacity: 0.0,
-                            pointRadius: 5,
-                            strokeColor: "#ff0000",
-                            strokeWidth: 2,
-                            strokeOpacity: 0.7,
-                            graphicZIndex: 1
-                        })
-                    })
-                });
-                /*if (window.parent.extentRestricted) {
-                 extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
-                 }*/
-                map.addLayers([extentRestrictLayer]);
+            success: function(response){
+                createTree(response);
             }
         })
-        ;
+
     };
     wfsTools = [
         new GeoExt.Action({

@@ -344,8 +344,21 @@ ul.x-tab-strip-bottom{
     background-image:url(../images/flat/button/btn.png);
 }
 
+.x-toolbar .x-btn td{
+    background-image:none
+}
+
+.x-btn-over {
+    background-image:none
+}
+
 .x-btn-click .x-btn-text, .x-btn-menu-active .x-btn-text, .x-btn-pressed .x-btn-text{
     color:#000;
+
+}
+table.x-btn-pressed
+{
+    background-color: #000055;
 }
 
 .x-btn-disabled *{

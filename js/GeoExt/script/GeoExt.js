@@ -2142,6 +2142,7 @@ GeoExt.form.ENDS_WITH = 1;
 GeoExt.form.STARTS_WITH = 2;
 GeoExt.form.CONTAINS = 3;
 GeoExt.form.recordToField = function (i, q) {
+    console.log(i)
     q = q || {};
     var l = i.get("type");
     if (typeof l === "object" && l.xtype) {
