@@ -3,21 +3,52 @@
 /*global OpenLayers:false */
 /*global GeoExt:false */
 /*global mygeocloud_ol:false */
-/*global schema:false */
-/*global screenName:false */
 /*global attributeForm:false */
 /*global geocloud:false */
 /*global gc2i18n:false */
+
+// In the following line, you should include the prefixes of implementations you want to test.
+window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+
+if (!window.indexedDB) {
+    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+}
+
+var indexedDb, request = window.indexedDB.open("gc2", 4);
+request.onerror = function (event) {
+    console.log(event)
+    alert("Database error: " + event.target.errorCode);
+};
+request.onsuccess = function (event) {
+    indexedDb = event.target.result;
+};
+
+request.onupgradeneeded = function (event) {
+    var db = event.target.result;
+    var objectStore = db.createObjectStore("transactions", {autoIncrement: true});
+};
+
+
 OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
 Ext.BLANK_IMAGE_URL = "js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
 
 Ext.Ajax.withCredentials = true;
-var App = new Ext.App({}), cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools, qstore = [], queryWin;
+var App = new Ext.App({}), screenName, subUser, schema, cloud, gc2, layer, grid, store, map, wfsTools, viewport, drawControl, gridPanel, modifyControl, tree, viewerSettings, loadTree, reLoadTree, layerBeingEditing, layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, measureWin, placeMarkers, placePopup, measureControls, extentRestrictLayer, addedBaseLayers = [], currentId, mapTools, qstore = [], queryWin, tbar,
+    schemasStore,
+    createLayer,
+    offline = false,
+    session,
+    host = "";
+
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
     var fieldsForStore, columnsForGrid, type, multi, handlerType, editable = true, sm, south = Ext.getCmp("attrtable"), singleEditing = single, createColumns;
-    layerBeingEditing = layerName;
+    var key = "table." + host + "." + screenName + "." + layerName;
+
+    layerBeingEditing = layerName.split(".")[1];
     layerBeingEditingGeomField = geomField;
     try {
         drawControl.deactivate();
@@ -30,49 +61,49 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     } catch (e) {
 
     }
-    createColumns = function (data) {
-            console.log(data)
-            var response = data, validProperties = true;
-            fieldsForStore = response.forStore;
-            columnsForGrid = response.forGrid;
-            type = response.type;
-            multi = response.multi;
-            // We add an editor to the fields
-            for (var i in columnsForGrid) {
-                columnsForGrid[i].editable = editable;
-                if (columnsForGrid[i].typeObj !== undefined) {
-                    if (columnsForGrid[i].properties) {
-                        try {
-                            var json = Ext.decode(columnsForGrid[i].properties);
-                            columnsForGrid[i].editor = new Ext.form.ComboBox({
-                                store: Ext.decode(columnsForGrid[i].properties),
-                                editable: true,
-                                triggerAction: 'all'
-                            });
-                            validProperties = false;
-                        }
-                        catch (e) {
-                            alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
-                        }
-                    } else if (columnsForGrid[i].typeObj.type === "int") {
-                        columnsForGrid[i].editor = new Ext.form.NumberField({
-                            decimalPrecision: 0,
-                            decimalSeparator: '¤'// Some strange char nobody is using
+    createColumns = function () {
+        var data = JSON.parse(localStorage.getItem(key));
+        var response = data, validProperties = true;
+        fieldsForStore = response.forStore;
+        columnsForGrid = response.forGrid;
+        type = response.type;
+        multi = response.multi;
+        // We add an editor to the fields
+        for (var i in columnsForGrid) {
+            columnsForGrid[i].editable = editable;
+            if (columnsForGrid[i].typeObj !== undefined) {
+                if (columnsForGrid[i].properties) {
+                    try {
+                        var json = Ext.decode(columnsForGrid[i].properties);
+                        columnsForGrid[i].editor = new Ext.form.ComboBox({
+                            store: Ext.decode(columnsForGrid[i].properties),
+                            editable: true,
+                            triggerAction: 'all'
                         });
-                    } else if (columnsForGrid[i].typeObj.type === "decimal") {
-                        columnsForGrid[i].editor = new Ext.form.NumberField({
-                            decimalPrecision: columnsForGrid[i].typeObj.scale,
-                            decimalSeparator: '.'
-                        });
-                    } else if (columnsForGrid[i].typeObj.type === "string") {
-                        columnsForGrid[i].editor = new Ext.form.TextField();
-                    } else if (columnsForGrid[i].typeObj.type === "text") {
-                        columnsForGrid[i].editor = new Ext.form.TextArea();
+                        validProperties = false;
                     }
+                    catch (e) {
+                        alert('There is invalid properties on field ' + columnsForGrid[i].dataIndex);
+                    }
+                } else if (columnsForGrid[i].typeObj.type === "int") {
+                    columnsForGrid[i].editor = new Ext.form.NumberField({
+                        decimalPrecision: 0,
+                        decimalSeparator: '¤'// Some strange char nobody is using
+                    });
+                } else if (columnsForGrid[i].typeObj.type === "decimal") {
+                    columnsForGrid[i].editor = new Ext.form.NumberField({
+                        decimalPrecision: columnsForGrid[i].typeObj.scale,
+                        decimalSeparator: '.'
+                    });
+                } else if (columnsForGrid[i].typeObj.type === "string") {
+                    columnsForGrid[i].editor = new Ext.form.TextField();
+                } else if (columnsForGrid[i].typeObj.type === "text") {
+                    columnsForGrid[i].editor = new Ext.form.TextArea();
                 }
             }
         }
-    var martin = function(){
+    };
+    createLayer = function () {
         if (type === "Point") {
             handlerType = OpenLayers.Handler.Point;
         }
@@ -159,7 +190,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             protocol: new OpenLayers.Protocol.WFS.v1_0_0({
                 url: host + "/wfs/" + (subUser ? subUser + "@" + screenName : screenName) + "/" + schema + "/900913" + (timeSlice ? "/" + timeSlice : "") + "?",
                 version: "1.0.0",
-                featureType: layerName,
+                featureType: layerName.split(".")[1],
                 featureNS: "http://mapcentia.com/" + screenName,
                 featurePrefix: screenName,
                 srsName: "EPSG:900913",
@@ -211,7 +242,6 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         });
         map.addControl(modifyControl);
         modifyControl.activate();
-        //wfsTools[0].control.activate();
 
         sm = new GeoExt.grid.FeatureSelectionModel({
             selectControl: modifyControl.selectControl,
@@ -290,22 +320,23 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         Ext.getCmp('editdeletebutton').setDisabled(false);
         Ext.getCmp('editsavebutton').setDisabled(false);
         Ext.getCmp('editstopbutton').setDisabled(false);
+    };
 
+    if (offline) {
+        createColumns();
+        createLayer();
+    } else {
+        $.ajax({
+            url: '/controllers/table/columns/' + layerName,
+            type: 'GET',
+            success: function (response) {
+                localStorage.setItem(key, JSON.stringify(response));
+                createColumns();
+                createLayer();
+            }
+        });
     }
 
-    // TODO check localStore
-    $.ajax({
-        url: host + '/controllers/table/columns/' + layerName,
-        dataType: 'json',
-        type: 'GET',
-        xhrFields: {
-            withCredentials: true
-        },
-        success: function(response){
-            createColumns(response);
-            martin();
-        }
-    });
 }
 $(document).ready(function () {
     'use strict';
@@ -390,6 +421,7 @@ $(document).ready(function () {
                     var geoField = metaDataKeys[value.split(".")[1]].f_geometry_column;
                     var geoType = metaDataKeys[value.split(".")[1]].type;
                     var layerTitel = metaDataKeys[value.split(".")[1]].f_table_name;
+                    var table = metaDataKeys[value.split(".")[1]].f_table_schema + "." + metaDataKeys[value.split(".")[1]].f_table_name;
                     var versioning = metaDataKeys[value.split(".")[1]].versioning;
                     if (geoType !== "POLYGON" && geoType !== "MULTIPOLYGON") {
                         var res = [156543.033928, 78271.516964, 39135.758482, 19567.879241, 9783.9396205,
@@ -466,8 +498,8 @@ $(document).ready(function () {
                                                                     property: "\"" + pkey + "\"",
                                                                     value: pkeyValue
                                                                 });
-                                                                attributeForm.init(layerTitel, geoField);
-                                                                startWfsEdition(layerTitel, geoField, filter, true);
+                                                                attributeForm.init(table, geoField);
+                                                                startWfsEdition(table, geoField, filter, true);
                                                                 Ext.iterate(qstore, function (v) {
                                                                     v.reset();
                                                                 });
@@ -550,7 +582,6 @@ $(document).ready(function () {
     var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
     var layers = {};
 
-
     loadTree = function () {
         var treeConfig = [
             {
@@ -587,6 +618,7 @@ $(document).ready(function () {
                     catch (e) {
                     }
                     layers[[response.data[u].f_table_schema + "." + response.data[u].f_table_name]] = cloud.addTileLayers([response.data[u].f_table_schema + "." + response.data[u].f_table_name], {
+                        db: screenName,
                         singleTile: false,
                         visibility: false,
                         wrapDateLine: false,
@@ -662,14 +694,14 @@ $(document).ready(function () {
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                 Ext.getCmp('editlayerbutton').setDisabled(false);
                                 Ext.getCmp('quickdrawbutton').setDisabled(false);
-                            } else if (e.leaf !== true){
+                            } else if (e.leaf !== true) {
 
                                 if (e.expanded) {
                                     e.collapse();
                                 } else {
                                     e.expand();
                                 }
-                                } else {
+                            } else {
                                 Ext.getCmp('editlayerbutton').setDisabled(true);
                                 Ext.getCmp('quickdrawbutton').setDisabled(true);
                             }
@@ -729,218 +761,7 @@ $(document).ready(function () {
                     }
                 }
             });
-            if (typeof viewport === "undefined") {
-                var navHandler = function(direction){
-                    // This routine could contain business logic required to manage the navigation steps.
-                    // It would call setActiveItem as needed, manage navigation button state, handle any
-                    // branching logic that might be required, handle alternate actions like cancellation
-                    // or finalization, etc.  A complete wizard implementation could get pretty
-                    // sophisticated depending on the complexity required, and should probably be
-                    // done as a subclass of CardLayout in a real-world implementation.
-                    console.log(direction)
-                    Ext.getCmp("cards").setActiveItem(direction)
-                };
-                viewport = new Ext.Viewport({
-                    layout: 'border',
-                    items: [
-                        {
-                            region: "center",
-                            layout: "fit",
-                            border: false,
-                            items:[
-                                new Ext.Panel({
-                                    layout:"card",
-                                    id:"cards",
-                                    activeItem: 0,
-                                    bbar: [
-                                        {
-                                            id: 'move-prev',
-                                            text: 'Back',
-                                            handler: navHandler.createDelegate(this, [-1]),
-                                            disabled: true
-                                        },
-                                        '->', // greedy spacer so that the buttons are aligned to each side
-                                        {
-                                            id: 'move-next',
-                                            text: 'Next',
-                                            handler: function(){
-                                                Ext.getCmp("cards").setActiveItem(1)
-                                            }
-                                        }
-                                    ],
-                                    items:[
-                                        new Ext.TabPanel({
-                                            id: "mainTabs",
-                                            tabPosition: "top",
-                                            unstyled: true,
-                                            layoutOnTabChange: true,
-                                            activeTab: 0,
-                                            resizeTabs: true,
-                                            items: [
-                                                new Ext.Panel({
-                                                    border: false,
-                                                    title: "Layers",
-                                                    tbar: [
-                                                        {
-                                                            text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
-                                                            id: "editlayerbutton",
-                                                            disabled: true,
-                                                            handler: function (thisBtn, event) {
-                                                                try {
-                                                                    stopEdit();
-                                                                }
-                                                                catch (e) {
-                                                                }
-                                                                try {
-                                                                    Ext.getCmp("loaddialog").remove(filter.queryPanel);
-                                                                } catch (e) {
-                                                                }
-                                                                try {
-                                                                    filter.queryPanel.destroy();
-                                                                } catch (e) {
-                                                                }
-                                                                try {
-                                                                    filter.queryPanel = undefined;
 
-                                                                } catch (e) {
-                                                                }
-
-
-                                                                var node = tree.getSelectionModel().getSelectedNode();
-                                                                var id = node.id.split(".");
-                                                                var geomField = node.attributes.geomField;
-                                                                var type = node.attributes.geomType;
-                                                                attributeForm.init(id[1], geomField);
-                                                                if (type === "GEOMETRY" || type === "RASTER") {
-                                                                    Ext.MessageBox.show({
-                                                                        title: 'No geometry type on layer',
-                                                                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                                        buttons: Ext.MessageBox.OK,
-                                                                        width: 400,
-                                                                        height: 300,
-                                                                        icon: Ext.MessageBox.ERROR
-                                                                    });
-                                                                }
-                                                                else {
-                                                                    var poll = function () {
-                                                                        if (typeof filter.win === "object") {
-                                                                            filter.win.show();
-                                                                            var activeTab = Ext.getCmp("mainTabs").getActiveTab();
-                                                                            Ext.getCmp("mainTabs").activate(2);
-                                                                            Ext.getCmp("attpanel").add(attributeForm.form);
-                                                                            Ext.getCmp("attpanel").doLayout();
-                                                                            Ext.getCmp("mainTabs").activate(activeTab);
-                                                                            attributeForm.form.disable();
-                                                                        }
-                                                                        else {
-                                                                            setTimeout(poll, 10);
-                                                                        }
-                                                                    };
-                                                                    poll();
-                                                                }
-                                                                poll();
-                                                            }
-                                                        },
-                                                        {
-                                                            text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
-                                                            id: "quickdrawbutton",
-                                                            disabled: true,
-                                                            handler: function () {
-                                                                Ext.getCmp("mainTabs").activate(1);
-                                                                var node = tree.getSelectionModel().getSelectedNode();
-                                                                var id = node.id.split(".");
-                                                                var geomField = node.attributes.geomField;
-                                                                var type = node.attributes.geomType;
-                                                                if (type === "GEOMETRY" || type === "RASTER") {
-                                                                    Ext.MessageBox.show({
-                                                                        title: 'No geometry type on layer',
-                                                                        msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                                        buttons: Ext.MessageBox.OK,
-                                                                        width: 400,
-                                                                        height: 300,
-                                                                        icon: Ext.MessageBox.ERROR
-                                                                    });
-                                                                    return false;
-                                                                }
-                                                                else {
-                                                                    var filter = new OpenLayers.Filter.Comparison({
-                                                                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                                                                        property: "\"dummy\"",
-                                                                        value: "-1"
-                                                                    });
-
-                                                                    attributeForm.init(id[1], geomField);
-                                                                    Ext.getCmp("attpanel").add(attributeForm.form);
-                                                                    attributeForm.form.disable();
-
-                                                                    startWfsEdition(id[1], geomField, filter);
-
-                                                                }
-                                                            }
-                                                        }, '-', {
-                                                            text: "<i class='icon-refresh btn-gc'></i> " + __("Reload"),
-                                                            handler: function () {
-                                                                stopEdit();
-                                                                reLoadTree();
-                                                            }
-                                                        }],
-                                                    items: [
-                                                        new Ext.Panel({
-                                                            border: false,
-                                                            id: "treepanel",
-                                                            style: {
-                                                                height: (Ext.getBody().getViewSize().height - 120) + "px",
-                                                                overflow: "auto"
-                                                            },
-                                                            collapsible: false
-
-                                                        })
-                                                    ]
-                                                }),
-                                                {
-                                                    title: "Map",
-                                                    border: false,
-                                                    id: "mappanel",
-                                                    xtype: "gx_mappanel",
-                                                    map: map,
-                                                    zoom: 5,
-                                                    split: true,
-                                                    tbar: wfsTools
-                                                },
-                                                {
-                                                    title: "Attribut",
-                                                    id: "attpanel",
-                                                    layout: "fit",
-
-                                                },
-                                                {
-                                                    id: "attrtable",
-                                                    title: "Table",
-                                                    layout: "fit",
-                                                    contentEl: "instructions"
-                                                }
-
-                                            ]
-                                        }),
-                                        new Ext.TabPanel({
-                                            html:"ggghhgg"
-                                        })
-                                    ]
-                                })
-                            ]
-                        }
-                    ]
-                });
-
-                if (window.parent.initExtent !== null) {
-                    cloud.map.zoomToExtent(window.parent.initExtent, false);
-                } else {
-                    cloud.map.zoomToMaxExtent();
-                }
-            }
-            else {
-                window.parent.App.setAlert(App.STATUS_NOTICE, __("Layer tree reloaded"));
-            }
 
             Ext.getCmp("mainTabs").activate(0);
             Ext.getCmp("mainTabs").activate(1);
@@ -970,18 +791,26 @@ $(document).ready(function () {
              extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(window.parent.settings.extentrestricts[schema]).toGeometry()));
              }*/
             map.addLayers([extentRestrictLayer]);
-        }
+
+
+        };
 
         // TODO check localStore
-        $.ajax({
-            url: host + '/api/v1/meta/' + screenName + '/' + schema,
-            dataType: 'json',
-            type: 'GET',
-            success: function(response){
-                createTree(response);
-            }
-        })
-
+        sessionStorage.setItem("session", true);
+        if (offline) {
+            var response = JSON.parse(localStorage.getItem("meta." + host + "." + screenName + "." + schema));
+            createTree(response);
+        } else {
+            $.ajax({
+                url: host + '/api/v1/meta/' + screenName + '/' + schema,
+                dataType: 'json',
+                type: 'GET',
+                success: function (response) {
+                    localStorage.setItem("meta." + host + "." + screenName + "." + schema, JSON.stringify(response));
+                    createTree(response);
+                }
+            });
+        }
     };
     wfsTools = [
         new GeoExt.Action({
@@ -1251,7 +1080,408 @@ $(document).ready(function () {
             fillOpacity: 0.3
         }
     };
-    loadTree();
+    if (typeof viewport === "undefined") {
+        var navHandler = function (direction) {
+            var w = Ext.getCmp('cards');
+            var activeIndex = w.items.indexOf(w.getLayout().activeItem) + direction;
+            cards.setActiveItem(activeIndex);
+        }, cards;
+        schemasStore = new Ext.data.Store({
+            reader: new Ext.data.JsonReader({
+                successProperty: 'success',
+                root: 'data'
+            }, [
+                {
+                    "name": "schema"
+                }
+            ]),
+            url: '/controllers/database/schemas',
+            listeners: {
+                load: function (e) {
+                    var data = [];
+                    e.data.each(function (item, index) {
+                        data.push(item.json);
+                    });
+                    localStorage.setItem("schemas." + host + "." + screenName, JSON.stringify(data));
+                }
+            }
+        });
+        var cardSwitch = function () {
+            var w = Ext.getCmp('cards');
+            var activeIndex = w.items.indexOf(w.getLayout().activeItem);
+            var mp = Ext.getCmp("move-prev");
+            var mn = Ext.getCmp("move-next");
+            switch (activeIndex) {
+                case 0:
+                    mp.disable();
+                    mn.enable();
+                    mp.setText("");
+                    mn.setText("Select schema >");
+                    break;
+                case 1:
+                    mp.enable();
+                    mn.enable();
+                    mp.setText("< Login");
+                    mn.setText("Editor >");
+                    break;
+                case 2:
+                    mp.enable();
+                    mn.disable();
+                    mp.setText("< Select schema");
+                    mn.setText("");
+                    break;
+
+            }
+        };
+        viewport = new Ext.Viewport({
+            layout: 'border',
+            listeners: {
+                afterlayout: function () {
+                    cards = Ext.getCmp("cards").layout;
+                    cards.setActiveItem(0);
+                }
+            },
+            items: [
+                {
+                    region: "center",
+                    layout: "fit",
+                    border: false,
+                    items: [
+                        new Ext.Panel({
+                            layout: "card",
+                            id: "cards",
+                            activeItem: 0,
+                            listeners: {
+                                afterlayout: function () {
+                                    tbar = Ext.getCmp("cards").getTopToolbar();
+                                }
+                            },
+                            tbar: [
+                                {
+                                    xtype: 'tbtext',
+                                    text: ' '
+                                }
+                            ],
+                            bbar: [
+                                {
+                                    id: 'move-prev',
+                                    text: 'Back',
+                                    handler: navHandler.createDelegate(this, [-1])
+                                },
+                                '->', // greedy spacer so that the buttons are aligned to each side
+                                {
+                                    id: 'move-next',
+                                    text: 'Next',
+                                    handler: navHandler.createDelegate(this, [1])
+
+                                }
+                            ],
+                            items: [
+                                new Ext.Panel({
+                                    listeners: {
+                                        activate: function (e) {
+                                            cardSwitch();
+                                        }
+                                    },
+                                    border: false,
+                                    items: {
+                                        xtype: "form",
+                                        id: 'loginForm',
+                                        border: false,
+                                        bodyStyle: {
+                                            padding: "10px"
+                                        },
+                                        items: [{
+                                            xtype: 'textfield',
+                                            name: 'u',
+                                            emptyText: 'Name',
+                                            fieldLabel: 'Database',
+                                            allowBlank: false,
+                                            id: "userField",
+                                            value: sessionStorage.getItem("screenName")
+                                        }, {
+                                            xtype: 'textfield',
+                                            inputType: 'password',
+                                            name: 'p',
+                                            emptyText: 'Password',
+                                            fieldLabel: 'Password'
+
+                                        }],
+                                        buttonAlign: "left",
+                                        buttons: [
+                                            {
+                                                text: __('Online'),
+                                                handler: function () {
+                                                    offline = false;
+                                                    if (Ext.getCmp("loginForm").form.isValid()) {
+                                                        Ext.getCmp("loginForm").form.submit({
+                                                            url: '/api/v1/session/start',
+                                                            success: function (e, a) {
+                                                                screenName = Ext.decode(a.response.responseText).user;
+                                                                sessionStorage.setItem("offline", false);
+                                                                cards.setActiveItem(1);
+                                                                schemasStore.load();
+                                                            },
+                                                            failure: function () {
+                                                                alert("Could not log in");
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                text: __('Offline'),
+                                                handler: function () {
+                                                    offline = true;
+                                                    if (Ext.getCmp("loginForm").form.isValid()) {
+                                                        cards.setActiveItem(1);
+                                                        screenName = Ext.getCmp("userField").getValue();
+                                                        sessionStorage.setItem("offline", true);
+                                                        schemasStore.loadData({
+                                                            "success": true,
+                                                            "data": JSON.parse(localStorage.getItem("schemas." + host + "." + Ext.getCmp("userField").getValue())),
+                                                            "_execution_time": 0.019
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }),
+                                new Ext.Panel({
+                                    listeners: {
+                                        activate: function (e) {
+                                            cardSwitch();
+                                        }
+                                    },
+                                    border: false,
+                                    items: {
+                                        xtype: "form",
+                                        id: 'schemaForm',
+                                        border: false,
+                                        bodyStyle: {
+                                            padding: "10px"
+                                        },
+                                        items: [{
+                                            xtype: "combo",
+                                            id: "schemabox",
+                                            fieldLabel: 'Schema',
+                                            store: schemasStore,
+                                            displayField: 'schema',
+                                            editable: false,
+                                            mode: 'local',
+                                            triggerAction: 'all',
+                                            value: schema,
+                                            width: 135,
+                                            allowBlank: false
+                                        }],
+                                        buttonAlign: "left",
+                                        buttons: [
+                                            {
+                                                text: __('Start'),
+                                                handler: function (e) {
+                                                    if (Ext.getCmp("schemaForm").form.isValid()) {
+                                                        cards.setActiveItem(2);
+                                                        schema = Ext.getCmp("schemabox").getValue();
+                                                        sessionStorage.setItem("schema", schema);
+                                                        sessionStorage.setItem("screenName", screenName);
+                                                        loadTree();
+                                                        tbar.removeAll();
+                                                        tbar.addText((offline ? "Offline" : "Online") + " > " + screenName + " > " + schema);
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }),
+                                new Ext.TabPanel({
+                                    id: "mainTabs",
+                                    tabPosition: "top",
+                                    unstyled: true,
+                                    layoutOnTabChange: true,
+                                    activeTab: 0,
+                                    resizeTabs: true,
+                                    listeners: {
+                                        activate: function (e) {
+                                            cardSwitch();
+                                        }
+                                    },
+                                    items: [
+                                        new Ext.Panel({
+                                            border: false,
+                                            title: "Layers",
+                                            tbar: [
+                                                {
+                                                    text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
+                                                    id: "editlayerbutton",
+                                                    disabled: true,
+                                                    handler: function (thisBtn, event) {
+                                                        try {
+                                                            stopEdit();
+                                                        }
+                                                        catch (e) {
+                                                        }
+                                                        try {
+                                                            Ext.getCmp("loaddialog").remove(filter.queryPanel);
+                                                        } catch (e) {
+                                                        }
+                                                        try {
+                                                            filter.queryPanel.destroy();
+                                                        } catch (e) {
+                                                        }
+                                                        try {
+                                                            filter.queryPanel = undefined;
+
+                                                        } catch (e) {
+                                                        }
+
+
+                                                        var node = tree.getSelectionModel().getSelectedNode();
+                                                        var id = node.id.split(".");
+                                                        var geomField = node.attributes.geomField;
+                                                        var type = node.attributes.geomType;
+                                                        attributeForm.init(id[0] + "." + id[1], geomField);
+                                                        if (type === "GEOMETRY" || type === "RASTER") {
+                                                            Ext.MessageBox.show({
+                                                                title: 'No geometry type on layer',
+                                                                msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                                                buttons: Ext.MessageBox.OK,
+                                                                width: 400,
+                                                                height: 300,
+                                                                icon: Ext.MessageBox.ERROR
+                                                            });
+                                                        }
+                                                        else {
+                                                            var poll = function () {
+                                                                if (typeof filter.win === "object") {
+                                                                    filter.win.show();
+                                                                    var activeTab = Ext.getCmp("mainTabs").getActiveTab();
+                                                                    Ext.getCmp("mainTabs").activate(2);
+                                                                    Ext.getCmp("attpanel").add(attributeForm.form);
+                                                                    Ext.getCmp("attpanel").doLayout();
+                                                                    Ext.getCmp("mainTabs").activate(activeTab);
+                                                                    attributeForm.form.disable();
+                                                                }
+                                                                else {
+                                                                    setTimeout(poll, 10);
+                                                                }
+                                                            };
+                                                            poll();
+                                                        }
+                                                        poll();
+                                                    }
+                                                },
+                                                {
+                                                    text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
+                                                    id: "quickdrawbutton",
+                                                    disabled: true,
+                                                    handler: function () {
+                                                        Ext.getCmp("mainTabs").activate(1);
+                                                        var node = tree.getSelectionModel().getSelectedNode();
+                                                        var id = node.id.split(".");
+                                                        var geomField = node.attributes.geomField;
+                                                        var type = node.attributes.geomType;
+                                                        if (type === "GEOMETRY" || type === "RASTER") {
+                                                            Ext.MessageBox.show({
+                                                                title: 'No geometry type on layer',
+                                                                msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
+                                                                buttons: Ext.MessageBox.OK,
+                                                                width: 400,
+                                                                height: 300,
+                                                                icon: Ext.MessageBox.ERROR
+                                                            });
+                                                            return false;
+                                                        }
+                                                        else {
+                                                            var filter = new OpenLayers.Filter.Comparison({
+                                                                type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                                                                property: "\"dummy\"",
+                                                                value: "-1"
+                                                            });
+
+                                                            attributeForm.init(id[0] + "." + id[1], geomField);
+                                                            Ext.getCmp("attpanel").add(attributeForm.form);
+                                                            attributeForm.form.disable();
+                                                            startWfsEdition(id[0] + "." + id[1], geomField, filter);
+                                                        }
+                                                    }
+                                                }],
+                                            items: [
+                                                new Ext.Panel({
+                                                    border: false,
+                                                    id: "treepanel",
+                                                    style: {
+                                                        height: (Ext.getBody().getViewSize().height - 120) + "px",
+                                                        overflow: "auto"
+                                                    },
+                                                    collapsible: false
+
+                                                })
+                                            ]
+                                        }),
+                                        {
+                                            title: "Map",
+                                            border: false,
+                                            id: "mappanel",
+                                            xtype: "gx_mappanel",
+                                            map: map,
+                                            zoom: 5,
+                                            split: true,
+                                            tbar: wfsTools
+                                        },
+                                        {
+                                            title: "Attribut",
+                                            id: "attpanel",
+                                            layout: "fit"
+
+                                        },
+                                        {
+                                            id: "attrtable",
+                                            title: "Table",
+                                            layout: "fit",
+                                            contentEl: "instructions"
+                                        }
+
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                }
+            ]
+        });
+
+        if (window.parent.initExtent !== null) {
+            cloud.map.zoomToExtent(window.parent.initExtent, false);
+        } else {
+            cloud.map.zoomToMaxExtent();
+        }
+    }
+    else {
+        window.parent.App.setAlert(App.STATUS_NOTICE, __("Layer tree reloaded"));
+    }
+
+    // Check session
+    session = sessionStorage.getItem("session");
+    if (session) {
+        Ext.getCmp("cards").layout.setActiveItem(2);
+        screenName = sessionStorage.getItem("screenName");
+        schema = sessionStorage.getItem("schema");
+        offline = JSON.parse(sessionStorage.getItem("offline"));
+        schemasStore.loadData({
+            "success": true,
+            "data": JSON.parse(localStorage.getItem("schemas." + host + "." + Ext.getCmp("userField").getValue())),
+            "_execution_time": 0.019
+        });
+        tbar.removeAll();
+        tbar.addText((offline ? "Offline" : "Online") + " > " + screenName + " > " + schema);
+        loadTree();
+    } else {
+        tbar.removeAll();
+        tbar.addText("Select database and schema");
+        Ext.getCmp("cards").layout.setActiveItem(0);
+    }
+
 });
 function stopEdit() {
     "use strict";
@@ -1376,15 +1606,15 @@ saveStrategy = new OpenLayers.Strategy.Save({
             var message = "";
             if (inserted) {
                 message = "<p>Inserted: " + inserted + "</p>";
-                // window.parent.App.setAlert(App.STATUS_OK, message);
+                window.parent.App.setAlert(App.STATUS_OK, message);
             }
             if (updated) {
                 message = "<p>Updated: " + updated + "</p>";
-                //window.parent.App.setAlert(App.STATUS_OK, message);
+                window.parent.App.setAlert(App.STATUS_OK, message);
             }
             if (deleted) {
                 message = "<p>Deleted: " + deleted + "</p>";
-                //window.parent.App.setAlert(App.STATUS_OK, message);
+                window.parent.App.setAlert(App.STATUS_OK, message);
             }
             //window.parent.writeFiles(false, map);
             var l;

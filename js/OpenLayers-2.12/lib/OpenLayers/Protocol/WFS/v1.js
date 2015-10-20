@@ -15,38 +15,38 @@
  *  - <OpenLayers.Protocol>
  */
 OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
-    
+
     /**
      * Property: version
      * {String} WFS version number.
      */
     version: null,
-    
+
     /**
      * Property: srsName
      * {String} Name of spatial reference system.  Default is "EPSG:4326".
      */
     srsName: "EPSG:4326",
-    
+
     /**
      * Property: featureType
      * {String} Local feature typeName.
      */
     featureType: null,
-    
+
     /**
      * Property: featureNS
      * {String} Feature namespace.
      */
     featureNS: null,
-    
+
     /**
      * Property: geometryName
      * {String} Name of the geometry attribute for features.  Default is
      *     "the_geom" for WFS <version> 1.0, and null for higher versions.
      */
     geometryName: "the_geom",
-    
+
     /**
      * Property: schema
      * {String} Optional schema location that will be included in the
@@ -62,7 +62,7 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      * {String} Namespace alias for feature type.  Default is "feature".
      */
     featurePrefix: "feature",
-    
+
     /**
      * Property: formatOptions
      * {Object} Optional options for the format.  If a format is not provided,
@@ -70,21 +70,21 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      */
     formatOptions: null,
 
-    /** 
-     * Property: readFormat 
-     * {<OpenLayers.Format>} For WFS requests it is possible to get a  
-     *     different output format than GML. In that case, we cannot parse  
-     *     the response with the default format (WFST) and we need a different 
-     *     format for reading. 
-     */ 
+    /**
+     * Property: readFormat
+     * {<OpenLayers.Format>} For WFS requests it is possible to get a
+     *     different output format than GML. In that case, we cannot parse
+     *     the response with the default format (WFST) and we need a different
+     *     format for reading.
+     */
     readFormat: null,
-    
+
     /**
      * Property: readOptions
      * {Object} Optional object to pass to format's read.
      */
     readOptions: null,
-    
+
     /**
      * Constructor: OpenLayers.Protocol.WFS
      * A class for giving layers WFS protocol.
@@ -110,9 +110,9 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      *     geometries before they are written in a transaction. No casting will
      *     be done when reading features.
      */
-    initialize: function(options) {
+    initialize: function (options) {
         OpenLayers.Protocol.prototype.initialize.apply(this, [options]);
-        if(!options.format) {
+        if (!options.format) {
             this.format = OpenLayers.Format.WFST(OpenLayers.Util.extend({
                 version: this.version,
                 featureType: this.featureType,
@@ -127,13 +127,13 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
             this.setGeometryName(null);
         }
     },
-    
+
     /**
      * APIMethod: destroy
      * Clean up the protocol.
      */
-    destroy: function() {
-        if(this.options && !this.options.format) {
+    destroy: function () {
+        if (this.options && !this.options.format) {
             this.format.destroy();
         }
         this.format = null;
@@ -186,23 +186,29 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      * });
      * (end)
      */
-    read: function(options) {
+    read: function (options) {
         OpenLayers.Protocol.prototype.read.apply(this, arguments);
         options = OpenLayers.Util.extend({}, options);
         OpenLayers.Util.applyDefaults(options, this.options || {});
         var response = new OpenLayers.Protocol.Response({requestType: "read"});
-        
+
         var data = OpenLayers.Format.XML.prototype.write.apply(
             this.format, [this.format.writeNode("wfs:GetFeature", options)]
         );
 
-        response.priv = OpenLayers.Request.POST({
-            url: options.url,
-            callback: this.createCallback(this.handleRead, response, options),
-            params: options.params,
-            headers: options.headers,
-            data: data
-        });
+        if (offline) {
+            // TODO
+            console.log(options.url)
+            console.log(data)
+        } else {
+            response.priv = OpenLayers.Request.POST({
+                url: options.url,
+                callback: this.createCallback(this.handleRead, response, options),
+                params: options.params,
+                headers: options.headers,
+                data: data
+            });
+        }
 
         return response;
     },
@@ -214,11 +220,11 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      * Parameters:
      * featureType - {String} Local (without prefix) feature typeName.
      */
-    setFeatureType: function(featureType) {
+    setFeatureType: function (featureType) {
         this.featureType = featureType;
         this.format.featureType = featureType;
     },
- 
+
     /**
      * APIMethod: setGeometryName
      * Sets the geometryName option after instantiation.
@@ -226,11 +232,11 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      * Parameters:
      * geometryName - {String} Name of geometry attribute.
      */
-    setGeometryName: function(geometryName) {
+    setGeometryName: function (geometryName) {
         this.geometryName = geometryName;
         this.format.geometryName = geometryName;
     },
-    
+
     /**
      * Method: handleRead
      * Deal with response from the read request.
@@ -240,16 +246,16 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      *     to the user callback.
      * options - {Object} The user options passed to the read call.
      */
-    handleRead: function(response, options) {
+    handleRead: function (response, options) {
         options = OpenLayers.Util.extend({}, options);
         OpenLayers.Util.applyDefaults(options, this.options);
 
-        if(options.callback) {
+        if (options.callback) {
             var request = response.priv;
-            if(request.status >= 200 && request.status < 300) {
+            if (request.status >= 200 && request.status < 300) {
                 // success
                 var result = this.parseResponse(request, options.readOptions);
-                if (result && result.success !== false) { 
+                if (result && result.success !== false) {
                     if (options.readOptions && options.readOptions.output == "object") {
                         OpenLayers.Util.extend(response, result);
                     } else {
@@ -279,19 +285,19 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      *
      * Returns:
      * {Object} or {Array({<OpenLayers.Feature.Vector>})} or
-     *     {<OpenLayers.Feature.Vector>} 
-     * An object with a features property, an array of features or a single 
+     *     {<OpenLayers.Feature.Vector>}
+     * An object with a features property, an array of features or a single
      * feature.
      */
-    parseResponse: function(request, options) {
+    parseResponse: function (request, options) {
         var doc = request.responseXML;
-        if(!doc || !doc.documentElement) {
+        if (!doc || !doc.documentElement) {
             doc = request.responseText;
         }
-        if(!doc || doc.length <= 0) {
+        if (!doc || doc.length <= 0) {
             return null;
         }
-        var result = (this.readFormat !== null) ? this.readFormat.read(doc) : 
+        var result = (this.readFormat !== null) ? this.readFormat.read(doc) :
             this.format.read(doc, options);
         if (!this.featureNS) {
             var format = this.readFormat || this.format;
@@ -319,8 +325,8 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      * Valid options properties:
      * nativeElements - {Array({Object})} Array of objects with information for writing
      * out <Native> elements, these objects have vendorId, safeToIgnore and
-     * value properties. The <Native> element is intended to allow access to 
-     * vendor specific capabilities of any particular web feature server or 
+     * value properties. The <Native> element is intended to allow access to
+     * vendor specific capabilities of any particular web feature server or
      * datastore.
      *
      * Returns:
@@ -328,46 +334,74 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      *     property containing any insertIds and a priv property referencing
      *     the XMLHttpRequest object.
      */
-    commit: function(features, options) {
+    commit: function (features, options) {
+        var l;
 
         options = OpenLayers.Util.extend({}, options);
         OpenLayers.Util.applyDefaults(options, this.options);
-        
+
         var response = new OpenLayers.Protocol.Response({
             requestType: "commit",
             reqFeatures: features
         });
-        response.priv = OpenLayers.Request.POST({
-            url: options.url,
-            headers: options.headers,
-            data: this.format.write(features, options),
-            callback: this.createCallback(this.handleCommit, response, options)
-        });
-        
+        if (offline) {
+            // TODO write this to indexedb
+            console.log(options.url);
+            console.log(this.format.write(features, options));
+
+            var transaction = indexedDb.transaction(["transactions"], "readwrite");
+            var objectStore = transaction.objectStore("transactions");
+            objectStore.add({
+                url: options.url,
+                request: this.format.write(features, options),
+                status: 1
+            });
+
+            layer.destroyFeatures();
+            l = window.map.getLayersByName(schema + "." + layerBeingEditing)[0];
+            l.clearGrid();
+            var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            l.url = l.url.replace(l.url.split("?")[1], "");
+            l.url = l.url + "token=" + n;
+            setTimeout(function () {
+                l.redraw();
+            }, 500);
+
+        } else {
+            response.priv = OpenLayers.Request.POST({
+                url: options.url,
+                headers: options.headers,
+                data: this.format.write(features, options),
+                callback: this.createCallback(this.handleCommit, response, options)
+            });
+        }
         return response;
     },
-    
+
     /**
      * Method: handleCommit
      * Called when the commit request returns.
-     * 
+     *
      * Parameters:
      * response - {<OpenLayers.Protocol.Response>} The response object to pass
      *     to the user callback.
      * options - {Object} The user options passed to the commit call.
      */
-    handleCommit: function(response, options) {
-        if(options.callback) {
+    handleCommit: function (response, options) {
+        if (options.callback) {
             var request = response.priv;
 
             // ensure that we have an xml doc
             var data = request.responseXML;
-            if(!data || !data.documentElement) {
+            if (!data || !data.documentElement) {
                 data = request.responseText;
             }
-            
+
             var obj = this.format.read(data) || {};
-            
+
             response.insertIds = obj.insertIds || [];
             if (obj.success) {
                 response.code = OpenLayers.Protocol.Response.SUCCESS;
@@ -378,55 +412,56 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
             options.callback.call(options.scope, response);
         }
     },
-    
+
     /**
      * Method: filterDelete
      * Send a request that deletes all features by their filter.
-     * 
+     *
      * Parameters:
      * filter - {<OpenLayers.Filter>} filter
      */
-    filterDelete: function(filter, options) {
+    filterDelete: function (filter, options) {
         options = OpenLayers.Util.extend({}, options);
-        OpenLayers.Util.applyDefaults(options, this.options);    
-        
+        OpenLayers.Util.applyDefaults(options, this.options);
+
         var response = new OpenLayers.Protocol.Response({
             requestType: "commit"
-        });    
-        
+        });
+
         var root = this.format.createElementNSPlus("wfs:Transaction", {
             attributes: {
                 service: "WFS",
                 version: this.version
             }
         });
-        
+
         var deleteNode = this.format.createElementNSPlus("wfs:Delete", {
             attributes: {
                 typeName: (options.featureNS ? this.featurePrefix + ":" : "") +
-                    options.featureType
+                options.featureType
             }
-        });       
-        
-        if(options.featureNS) {
+        });
+
+        if (options.featureNS) {
             deleteNode.setAttribute("xmlns:" + this.featurePrefix, options.featureNS);
         }
         var filterNode = this.format.writeNode("ogc:Filter", filter);
-        
+
         deleteNode.appendChild(filterNode);
-        
+
         root.appendChild(deleteNode);
-        
+
         var data = OpenLayers.Format.XML.prototype.write.apply(
             this.format, [root]
         );
-        
+
         return OpenLayers.Request.POST({
             url: this.url,
-            callback : options.callback || function(){},
+            callback: options.callback || function () {
+            },
             data: data
-        });   
-        
+        });
+
     },
 
     /**
@@ -438,11 +473,11 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
      * Parameters:
      * response - {<OpenLayers.Protocol.Response>}
      */
-    abort: function(response) {
+    abort: function (response) {
         if (response) {
             response.priv.abort();
         }
     },
-  
-    CLASS_NAME: "OpenLayers.Protocol.WFS.v1" 
+
+    CLASS_NAME: "OpenLayers.Protocol.WFS.v1"
 });

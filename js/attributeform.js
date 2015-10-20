@@ -1,7 +1,7 @@
 Ext.namespace('attributeForm');
 Ext.namespace("filter");
 attributeForm.init = function (layer, geomtype) {
-    var arr = [], key= "describe."+host +"."+screenName+"."+schema+"."+layer;
+    var arr = [], createFilter, key = "describe." + host + "." + screenName + "." + layer;
     Ext.QuickTips.init();
 
     try {
@@ -28,7 +28,7 @@ attributeForm.init = function (layer, geomtype) {
     } catch (e) {
     }
     attributeForm.attributeStore = new GeoExt.data.AttributeStore({
-        url: host + '/wfs/' + screenName + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer,
+        url: host + '/wfs/' + screenName + '/' + schema + '?REQUEST=DescribeFeatureType&TYPENAME=' + layer.split(".")[1],
         listeners: {
             load: {
                 scope: this,
@@ -41,14 +41,15 @@ attributeForm.init = function (layer, geomtype) {
                             nillable: record.get("nillable")
                         });
                     }, this);
-                    localStorage.setItem(key, JSON.stringify(arr))
-                    test();
+                    localStorage.setItem(key, JSON.stringify(arr));
+                    createFilter();
                 }
             }
         }
     });
-    function test() {
-        arr = JSON.parse(localStorage.getItem(key))
+    createFilter = function() {
+        arr = JSON.parse(localStorage.getItem(key));
+        attributeForm.attributeStore.data.clear();
         attributeForm.attributeStoreCopy = new Ext.data.ArrayStore();
         for (var i = 0; i < arr.length; i++) {
             var match = /gml:((Multi)?(Point|Line|Polygon|Curve|Surface)).*/.exec(arr[i].type);
@@ -62,7 +63,7 @@ attributeForm.init = function (layer, geomtype) {
                 };
                 var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
                 attributeForm.attributeStoreCopy.add(newRecord);
-                attributeForm.attributeStore.data.add(newRecord)
+                attributeForm.attributeStore.data.add(newRecord);
             }
         }
         filter.filterBuilder = new gxp.FilterBuilder({
@@ -142,10 +143,12 @@ attributeForm.init = function (layer, geomtype) {
             }
         });
     }
+    if (offline){
+        createFilter();
+    } else {
+        attributeForm.attributeStore.load();
 
-    //test()
-    attributeForm.attributeStore.load();
-
+    }
     attributeForm.form = new Ext.form.FormPanel({
         autoScroll: true,
         region: 'center',

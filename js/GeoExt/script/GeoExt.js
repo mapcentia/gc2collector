@@ -2142,7 +2142,6 @@ GeoExt.form.ENDS_WITH = 1;
 GeoExt.form.STARTS_WITH = 2;
 GeoExt.form.CONTAINS = 3;
 GeoExt.form.recordToField = function (i, q) {
-    console.log(i)
     q = q || {};
     var l = i.get("type");
     if (typeof l === "object" && l.xtype) {
@@ -2231,7 +2230,7 @@ GeoExt.form.recordToField = function (i, q) {
                 iconCls: 'upload-icon'
             },
             listeners: {
-                'afterrender': function(cmp) {
+                'afterrender': function (cmp) {
                     cmp.getEl().next().set({
                         "accept": "image/*"
                     });
@@ -2239,32 +2238,18 @@ GeoExt.form.recordToField = function (i, q) {
                 'fileselected': function (fb, v) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
-                    reader.onload = function (e) {
-                        img.src = e.target.result;
-                        var canvas = document.createElement("canvas"),
-                            ctx = canvas.getContext("2d"),
-                            MAX_WIDTH = 800,
-                            MAX_HEIGHT = 800,
-                            width = img.width,
-                            height = img.height;
-                        ctx.drawImage(img, 0, 0);
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
+                            canvasResize(file, {
+                            width: 300,
+                            height: 0,
+                            crop: false,
+                            quality: 80,
+                            //rotate: 90,
+                            callback: function(data, width, height) {
+                                $("#" + fb.id).val(btoa(data));
+                                //$("#" + fb.id).val(data);
                             }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        $("#" + fb.id).val(btoa(canvas.toDataURL("image/png")));
-                    };
-                    reader.readAsDataURL(file);
+                        });
+
                 }
             }
         }, h);
@@ -2282,7 +2267,7 @@ GeoExt.form.recordToField = function (i, q) {
                 'fileselected': function (fb, v) {
                     var reader = new FileReader()
                     file = document.querySelector('#' + fb.fileInput.id).files[0];
-                    reader.onload = function (e) {
+                    reader.onloadend = function (e) {
                         $("#" + fb.id).val(btoa(reader.result));
                     };
                     reader.readAsDataURL(file);

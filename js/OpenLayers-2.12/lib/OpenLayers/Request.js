@@ -162,7 +162,8 @@ OpenLayers.Request = {
      * {XMLHttpRequest} Request object.  To abort the request before a response
      *     is received, call abort() on the request object.
      */
-    issue: function(config) {        
+    issue: function(config) {
+
         // apply default config - proxy host may have changed
         var defaultConfig = OpenLayers.Util.extend(
             this.DEFAULT_CONFIG,
