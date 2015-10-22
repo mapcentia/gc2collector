@@ -345,14 +345,14 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
             reqFeatures: features
         });
         if (offline) {
-            // TODO write this to indexedb
             console.log(options.url);
             console.log(this.format.write(features, options));
 
             //var transaction = indexedDb.transaction(["transactions"], "readwrite");
             //var objectStore = transaction.objectStore("transactions");
 
-            getTransactionStore().add({
+            var objectStore = getTransactionStore();
+            var requestUpdate = objectStore.add({
                 db: (subUser ? subUser + "@" : "") + screenName,
                 schema: schema,
                 table: layerBeingEditing,
@@ -360,6 +360,16 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
                 request: this.format.write(features, options),
                 synced: 1
             });
+
+            requestUpdate.onerror = function (event) {
+                console.log("Insert error");
+                console.log(event);
+            };
+            requestUpdate.onsuccess = function (event) {
+                console.log("Insert success");
+                console.log(event);
+            };
+
 
             layer.destroyFeatures();
             l = window.map.getLayersByName(schema + "." + layerBeingEditing)[0];
