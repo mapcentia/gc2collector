@@ -363,15 +363,16 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
 
             requestUpdate.onerror = function (event) {
                 console.log("Insert error");
-                console.log(event);
+                App.setAlert(App.STATUS_OK, "Could NOT archive new feature.");
             };
             requestUpdate.onsuccess = function (event) {
                 console.log("Insert success");
-                console.log(event);
+                layer.destroyFeatures();
+                App.setAlert(App.STATUS_OK, "New feature archived");
             };
 
 
-            layer.destroyFeatures();
+
             l = window.map.getLayersByName(schema + "." + layerBeingEditing)[0];
             l.clearGrid();
             var n = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {

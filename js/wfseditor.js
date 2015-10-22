@@ -1377,7 +1377,9 @@ $(document).ready(function () {
         getTransactionStore().openCursor().onsuccess = function (event) {
             var cursor = event.target.result;
             if (cursor) {
-                cursor.value.id = cursor.key;
+                if (typeof cursor.value.id === "undefined") {
+                    cursor.value.id = cursor.key;
+                }
                 if (cursor.value.synced === 1) {
                     vArr1.push(cursor.value);
                 } else if (cursor.value.synced === 2) {
@@ -1422,12 +1424,15 @@ $(document).ready(function () {
                                 var request = objectStore.get(vArr1[i].id);
                                 request.onsuccess = function (event) {
                                     var data = request.result;
+                                    data.id = vArr1[i].id;
                                     data.synced = 2;
-                                    var requestUpdate = objectStore.put(data, vArr1[i].id);
-                                    requestUpdate.onerror = function (event) {
-                                        // Do something with the error
+                                    var requestUpdate = objectStore.add(data);
+                                    var requestDelete = objectStore.delete(vArr1[i].id);
+                                    requestDelete.onerror = function (event) {
+                                        console.log("Update error");
                                     };
-                                    requestUpdate.onsuccess = function (event) {
+                                    requestDelete.onsuccess = function (event) {
+                                        console.log("Update success");
                                         sm.getSelected().set("status", "Success");
                                         i = i + 1;
                                         iter();
