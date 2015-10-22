@@ -349,12 +349,16 @@ OpenLayers.Protocol.WFS.v1 = OpenLayers.Class(OpenLayers.Protocol, {
             console.log(options.url);
             console.log(this.format.write(features, options));
 
-            var transaction = indexedDb.transaction(["transactions"], "readwrite");
-            var objectStore = transaction.objectStore("transactions");
-            objectStore.add({
+            //var transaction = indexedDb.transaction(["transactions"], "readwrite");
+            //var objectStore = transaction.objectStore("transactions");
+
+            getTransactionStore().add({
+                db: (subUser ? subUser + "@" : "") + screenName,
+                schema: schema,
+                table: layerBeingEditing,
                 url: options.url,
                 request: this.format.write(features, options),
-                status: 1
+                synced: 1
             });
 
             layer.destroyFeatures();

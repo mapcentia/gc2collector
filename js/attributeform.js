@@ -1,7 +1,7 @@
 Ext.namespace('attributeForm');
 Ext.namespace("filter");
 attributeForm.init = function (layer, geomtype) {
-    var arr = [], createFilter, key = "describe." + host + "." + screenName + "." + layer;
+    var arr = [], createFilter, key = "describe." + host + "." + localStoreKey + "." + layer;
     Ext.QuickTips.init();
 
     try {
@@ -49,6 +49,10 @@ attributeForm.init = function (layer, geomtype) {
     });
     createFilter = function() {
         arr = JSON.parse(localStorage.getItem(key));
+        if (!arr) {
+            alert("You've to start editing the layer online before you can do it offline.");
+            return false;
+        }
         attributeForm.attributeStore.data.clear();
         attributeForm.attributeStoreCopy = new Ext.data.ArrayStore();
         for (var i = 0; i < arr.length; i++) {
@@ -142,7 +146,7 @@ attributeForm.init = function (layer, geomtype) {
                 }
             }
         });
-    }
+    };
     if (offline){
         createFilter();
     } else {
