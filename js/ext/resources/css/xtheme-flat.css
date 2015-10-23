@@ -973,6 +973,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-tree-node a span, .x-dd-drag-ghost a span{
     color:#000;
+    line-height: 28px;
 }
 
 .x-tree-node .x-tree-node-disabled a span{
@@ -1835,12 +1836,6 @@ input.x-tree-node-cb{
 }
 
 
-.x-toolbar-left {
-    height: 26px;
-}
-.x-btn {
-    height: 35px;
-}
 
 .ext-strict .x-form-text {
     height: 24px;
@@ -1852,4 +1847,8 @@ input.x-tree-node-cb{
 .x-btn-noicon .x-btn-small .x-btn-text {
     height: 20px;
     line-height: 20px;
+}
+
+ul.x-tab-strip-top {
+    border-bottom: 2px solid #aaa;
 }

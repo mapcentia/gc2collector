@@ -527,14 +527,14 @@ $(document).ready(function () {
     wfsTools = [
         new GeoExt.Action({
             control: drawControl,
-            text: "<i class='icon-pencil btn-gc'></i> " + __("Draw"),
+            text: "<i class='icon-pencil btn-gc'></i> " + __(""),
             id: "editcreatebutton",
             disabled: true,
             enableToggle: true
         }),
         '-',
         {
-            text: "<i class='icon-trash btn-gc'></i> " + __("Delete"),
+            text: "<i class='icon-trash btn-gc'></i> " + __(""),
             id: "editdeletebutton",
             disabled: true,
             handler: function () {
@@ -552,7 +552,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-ok btn-gc'></i> " + __("Save"),
+            text: "<i class='icon-ok btn-gc'></i> " + __(""),
             disabled: true,
             id: "editsavebutton",
             handler: function () {
@@ -566,7 +566,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-stop btn-gc'></i> " + __("Stop editing"),
+            text: "<i class='icon-stop btn-gc'></i> " + __(""),
             disabled: true,
             id: "editstopbutton",
             handler: stopEdit
@@ -1351,6 +1351,8 @@ $(document).ready(function () {
                                     },
                                     {
                                         id: "attrtable",
+                                        border: false,
+
                                         title: "Table",
                                         layout: "fit",
                                         contentEl: "instructions"
