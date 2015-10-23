@@ -1063,7 +1063,7 @@ $(document).ready(function () {
                                     xtype: "form",
                                     id: 'loginForm',
                                     border: false,
-                                    labelWidth: 70,
+                                    labelWidth: 90,
                                     bodyStyle: {
                                         padding: "10px"
                                     },
@@ -1163,7 +1163,7 @@ $(document).ready(function () {
                                     xtype: "form",
                                     id: 'schemaForm',
                                     border: false,
-                                    labelWidth: 60,
+                                    labelWidth: 70,
                                     bodyStyle: {
                                         padding: "10px"
                                     },
