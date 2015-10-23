@@ -160,7 +160,7 @@ attributeForm.init = function (layer, geomtype) {
             forceFit: true
         },
         border: false,
-        labelWidth: 150,
+        labelWidth: 100,
         bodyStyle: {
             background: '#ffffff',
             padding: '7px'

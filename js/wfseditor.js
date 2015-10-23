@@ -407,7 +407,7 @@ $(document).ready(function () {
                                  }*/
                             }
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
-                                Ext.getCmp('editlayerbutton').setDisabled(false);
+                                Ext.getCmp('editlayerbutton').setDisabled(offline ? true : false);
                                 Ext.getCmp('quickdrawbutton').setDisabled(false);
                             } else if (e.leaf !== true) {
 
@@ -847,13 +847,22 @@ $(document).ready(function () {
                 break;
             case 1:
                 mp.enable();
-                mn.enable();
+                console.log(session)
+                if (session) {
+                    mn.enable();
+                } else {
+                    mn.disable();
+                }
                 mp.setText("< Archive");
                 mn.setText("Select schema >");
                 break;
             case 2:
                 mp.enable();
-                mn.enable();
+                if (schema) {
+                    mn.enable();
+                } else {
+                    mn.disable();
+                }
                 mp.setText("< Login");
                 mn.setText("Editor >");
                 break;
@@ -1054,7 +1063,7 @@ $(document).ready(function () {
                                     xtype: "form",
                                     id: 'loginForm',
                                     border: false,
-                                    labelWidth: 60,
+                                    labelWidth: 70,
                                     bodyStyle: {
                                         padding: "10px"
                                     },
@@ -1932,5 +1941,21 @@ saveStrategy = new OpenLayers.Strategy.Save({
         }
     }
 });
+
+function toggleFullScreen() {
+    var doc = window.document;
+    var docEl = doc.documentElement;
+
+    var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+    if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+        requestFullScreen.call(docEl);
+    }
+    else {
+        cancelFullScreen.call(doc);
+    }
+}
+toggleFullScreen()
 
 
