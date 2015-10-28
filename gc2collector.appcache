@@ -31,13 +31,32 @@ js/ext/examples/shared/icons/silk.css
 js/bootstrap/css/bootstrap.icons.min.css
 css/styles.css
 js/OpenLayers-2.12/theme/default/style.css
+js/ext/resources/images/default/s.gif
+
+js/ext/resources/images/flat/grid/grid3-hd-btn.gif
+js/ext/resources/images/default/dd/drop-no.gif
+js/ext/resources/images/flat/grid/col-move-bottom.gif
+js/ext/resources/images/flat/grid/col-move-top.gif
+js/bootstrap/img/glyphicons-halflings.png
+js/ext/resources/images/default/s.gif
+js/ext/resources/images/flat/button/btn.png
+js/ext/resources/images/flat/form/trigger.png
+js/ext/resources/images/flat/grid/grid-split.png
+js/ext/resources/images/default/tree/elbow-plus-nl.gif
+js/ext/resources/images/flat/tree/elbow-end-plus-nl.gif
+js/ext/resources/images/default/tree/leaf.gif
+js/ext/resources/images/flat/tree/elbow-end-minus-nl.gif
+js/ext/resources/images/default/tree/elbow-minus-nl.gif
 
 /api/v1/baselayerjs
 
-
-
 FALLBACK:
 * index.html
+
+
+
+
+
 
 
 
