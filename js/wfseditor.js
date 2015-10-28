@@ -7,6 +7,41 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 
+var appCache = window.applicationCache;
+
+
+function cStatus() {
+    appCache.update();
+    alert(appCache.status)
+    switch (appCache.status) {
+        case appCache.UNCACHED: // UNCACHED == 0
+            return 'UNCACHED';
+            break;
+        case appCache.IDLE: // IDLE == 1
+            return 'IDLE';
+            break;
+        case appCache.CHECKING: // CHECKING == 2
+            return 'CHECKING';
+            break;
+        case appCache.DOWNLOADING: // DOWNLOADING == 3
+            return 'DOWNLOADING';
+            break;
+        case appCache.UPDATEREADY:  // UPDATEREADY == 4
+            alert()
+            appCache.swapCache();
+            window.location.reload();
+            return 'UPDATEREADY';
+            break;
+        case appCache.OBSOLETE: // OBSOLETE == 5
+            return 'OBSOLETE';
+            break;
+        default:
+            return 'UKNOWN CACHE STATUS';
+            break;
+    }
+}
+
+
 // In the following line, you should include the prefixes of implementations you want to test.
 window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
@@ -215,6 +250,12 @@ $(document).ready(function () {
                                                                     value: pkeyValue
                                                                 });
                                                                 attributeForm.init(table, geoField);
+                                                                var activeTab = Ext.getCmp("mainTabs").getActiveTab();
+                                                                Ext.getCmp("mainTabs").activate(2);
+                                                                Ext.getCmp("attpanel").add(attributeForm.form);
+                                                                Ext.getCmp("attpanel").doLayout();
+                                                                Ext.getCmp("mainTabs").activate(activeTab);
+                                                                attributeForm.form.disable();
                                                                 startWfsEdition(table, geoField, filter, true);
                                                                 Ext.iterate(qstore, function (v) {
                                                                     v.reset();
@@ -1148,6 +1189,12 @@ $(document).ready(function () {
 
                                                 }
                                             }
+                                        },
+                                        {
+                                            text: "Check",
+                                            handler: function () {
+                                                applicationCache.update();
+                                            }
                                         }
                                     ]
                                 }
@@ -1282,11 +1329,10 @@ $(document).ready(function () {
                                                         };
                                                         poll();
                                                     }
-                                                    poll();
                                                 }
                                             },
                                             {
-                                                text: "<i class='icon-edit btn-gc'></i> " + __("Quick draw"),
+                                                text: "<i class='icon-edit btn-gc'></i> " + __("Add feature"),
                                                 id: "quickdrawbutton",
                                                 disabled: true,
                                                 handler: function () {
@@ -1951,7 +1997,7 @@ function toggleFullScreen() {
     var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
     var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
 
-    if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
         requestFullScreen.call(docEl);
     }
     else {
