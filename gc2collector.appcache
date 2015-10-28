@@ -1,5 +1,6 @@
 CACHE MANIFEST
 #Version 3
+
 CACHE:
 js/wfseditor.js
 js/i18n/en_US.js
@@ -23,7 +24,14 @@ js/openlayers/proj4js-combined.js
 js/ext/resources/images/flat/qtip/tip-sprite.gif
 js/ext/resources/images/flat/qtip/tip-anchor-sprite.gif
 js/OpenLayers-2.12/theme/default/style.css
+js/ext/resources/css/ext-all-notheme.css
+js/ext/resources/css/ext-all.css
 /api/v1/baselayerjs
+
+
+
+FALLBACK:
+* index.html
 
 
 
