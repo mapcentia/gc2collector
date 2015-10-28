@@ -26,6 +26,12 @@ js/ext/resources/images/flat/qtip/tip-anchor-sprite.gif
 js/OpenLayers-2.12/theme/default/style.css
 js/ext/resources/css/ext-all-notheme.css
 js/ext/resources/css/ext-all.css
+js/ext/resources/css/xtheme-flat.css
+js/ext/examples/shared/icons/silk.css
+js/bootstrap/css/bootstrap.icons.min.css
+css/styles.css
+js/OpenLayers-2.12/theme/default/style.css
+
 /api/v1/baselayerjs
 
 
