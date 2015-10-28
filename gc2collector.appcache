@@ -1,6 +1,7 @@
 CACHE MANIFEST
 
 CACHE:
+gc2collector.appcache
 index.html
 /apps/gc2collector/
 /apps/gc2collector/js/i18n/en_US.js
