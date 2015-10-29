@@ -7,33 +7,8 @@
 /*global geocloud:false */
 /*global gc2i18n:false */
 
-var appCache = window.applicationCache;
 
 
-$(window).load(function () {
-    if (appCache) {
-        appCache.addEventListener('updateready', function (e) {
-            if (appCache.status === appCache.UPDATEREADY) {
-                // Browser downloaded a new app cache.
-                // Swap it in and reload the page to get the new hotness.
-                appCache.swapCache();
-                if (confirm('A new version of this App is available. Load it now?')) {
-                    window.location.reload();
-                }
-            } else {
-                // no manifest change..
-            }
-        }, false);
-
-        // if there is no update, display a message
-        appCache.addEventListener('noupdate', function (e) {
-
-            alert('App is up to date. ');
-
-        }, false);
-
-    }
-}, false);
 
 
 // In the following line, you should include the prefixes of implementations you want to test.
@@ -879,7 +854,7 @@ $(document).ready(function () {
                                 text: 'Back',
                                 handler: navHandler.createDelegate(this, [-1])
                             },
-                            '->', // greedy spacer so that the buttons are aligned to each side
+                            '->',
                             {
                                 id: 'move-next',
                                 text: 'Next',
@@ -1123,60 +1098,58 @@ $(document).ready(function () {
                                     ]
                                 }
                             }),
-                            new Ext.Panel({
-                                listeners: {
-                                    activate: function (e) {
-                                        cardSwitch();
-                                    }
-                                },
+
+                            new Ext.grid.GridPanel({
+                                id: "schemaGrid",
                                 border: false,
-                                items: {
-                                    xtype: "form",
-                                    id: 'schemaForm',
-                                    border: false,
-                                    labelWidth: 70,
-                                    bodyStyle: {
-                                        padding: "10px"
-                                    },
-                                    items: [{
-                                        xtype: "combo",
-                                        id: "schemabox",
-                                        fieldLabel: 'Schema',
-                                        store: schemasStore,
-                                        displayField: 'schema',
-                                        editable: false,
-                                        mode: 'local',
-                                        triggerAction: 'all',
-                                        value: schema,
-                                        width: 135,
-                                        allowBlank: false
-                                    }],
-                                    buttonAlign: "left",
-                                    buttons: [
-                                        {
-                                            text: __('Start'),
-                                            handler: function (e) {
-                                                if (Ext.getCmp("schemaForm").form.isValid()) {
-                                                    schema = Ext.getCmp("schemabox").getValue();
-                                                    sessionStorage.setItem("schema", schema);
-                                                    if (offline) {
-                                                        var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema));
-                                                        if (!response) {
-                                                            alert("You've to start with the schema online before you can do it offline.");
-                                                            return;
-                                                        } else {
-                                                            loadTree(response);
-                                                        }
-                                                    } else {
-                                                        loadTree(null);
-                                                    }
-                                                    cards.setActiveItem(3);
-                                                    setState();
-                                                }
+                                viewConfig: {
+                                    forceFit: true
+                                },
+                                sm: new Ext.grid.RowSelectionModel({
+                                    singleSelect: true
+                                }),
+                                tbar: [
+                                    {
+                                        text: "Select",
+                                        handler: function (e) {
+                                            var record = Ext.getCmp("schemaGrid").getSelectionModel().getSelections();
+                                            if (record.length === 0) {
+                                                App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                                                return false;
                                             }
+                                            schema = record[0].data.schema;
+                                            sessionStorage.setItem("schema", schema);
+                                            if (offline) {
+                                                var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema));
+                                                if (!response) {
+                                                    alert("You've to start with the schema online before you can do it offline.");
+                                                    return;
+                                                } else {
+                                                    loadTree(response);
+                                                }
+                                            } else {
+                                                loadTree(null);
+                                            }
+                                            cards.setActiveItem(3);
+                                            setState();
+
+                                        }
+                                    }
+                                ],
+                                store: schemasStore,
+                                cm: new Ext.grid.ColumnModel({
+                                    defaults: {
+                                        sortable: true,
+                                        menuDisabled: true
+                                    },
+                                    columns: [
+                                        {
+                                            header: __("Schema"),
+                                            dataIndex: "schema",
+                                            sortable: true
                                         }
                                     ]
-                                }
+                                })
                             }),
                             new Ext.TabPanel({
                                 id: "mainTabs",
