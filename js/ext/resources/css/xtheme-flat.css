@@ -565,6 +565,10 @@ table.x-btn-pressed
     font:normal 12px arial, tahoma, helvetica, sans-serif;
 }
 
+#schemaGrid .x-grid3-row td, .x-grid3-summary-row td{
+    font:normal 15px arial, tahoma, helvetica, sans-serif;
+}
+
 .x-grid3-hd-row td {
     font:normal 16px/15px arial, tahoma, helvetica, sans-serif;
 }
@@ -1872,4 +1876,7 @@ ul.x-tab-strip-top {
 
 .x-btn-pressed .x-btn-small {
     background-color: #BBBBBB;
+}
+.x-grid3-cell {
+    line-height: 25px !important;
 }
