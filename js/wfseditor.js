@@ -307,24 +307,24 @@ $(document).ready(function () {
             }, 250);
         }
     });
-    if (typeof window.setBaseLayers !== 'object') {
-        window.setBaseLayers = [
+    if (typeof window.setBaseLayersCollector !== 'object') {
+        window.setBaseLayersCollector = [
             {"id": "mapQuestOSM", "name": "MapQuset OSM"},
             {"id": "osm", "name": "OSM"}
         ];
     }
     cloud.bingApiKey = window.bingApiKey;
     cloud.digitalGlobeKey = window.digitalGlobeKey;
-    window.setBaseLayers = window.setBaseLayers.reverse();
+    window.setBaseLayersCollector = window.setBaseLayersCollector.reverse();
 
-    for (var i = 0; i < window.setBaseLayers.length; i++) {
-        if (typeof window.setBaseLayers[i].restrictTo === "undefined" || window.setBaseLayers[i].restrictTo.indexOf(schema) > -1) {
+    for (var i = 0; i < window.setBaseLayersCollector.length; i++) {
+        if (typeof window.setBaseLayersCollector[i].restrictTo === "undefined" || window.setBaseLayersCollector[i].restrictTo.indexOf(schema) > -1) {
             // Local base layer
-            if (typeof window.setBaseLayers[i].db !== "undefined") {
-                altId = window.setBaseLayers[i].id + window.setBaseLayers[i].name;
-                lName = window.setBaseLayers[i].name;
+            if (typeof window.setBaseLayersCollector[i].db !== "undefined") {
+                altId = window.setBaseLayersCollector[i].id + window.setBaseLayersCollector[i].name;
+                lName = window.setBaseLayersCollector[i].name;
             }
-            bl = cloud.addBaseLayer(window.setBaseLayers[i].id, window.setBaseLayers[i].db, altId, lName);
+            bl = cloud.addBaseLayer(window.setBaseLayersCollector[i].id, window.setBaseLayersCollector[i].db, altId, lName);
         }
     }
     if (bl !== null) {
