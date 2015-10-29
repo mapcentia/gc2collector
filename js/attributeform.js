@@ -53,6 +53,7 @@ attributeForm.init = function (layer, geomtype) {
             alert("You've to start editing the layer online before you can do it offline.");
             return false;
         }
+        Ext.getCmp("mainTabs").activate(1);
         attributeForm.attributeStore.data.clear();
         attributeForm.attributeStoreCopy = new Ext.data.ArrayStore();
         for (var i = 0; i < arr.length; i++) {

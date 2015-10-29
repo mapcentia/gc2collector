@@ -1234,7 +1234,6 @@ $(document).ready(function () {
                                                 disabled: true,
                                                 handler: function () {
                                                     quickDrawMode = true;
-                                                    Ext.getCmp("mainTabs").activate(1);
                                                     var node = tree.getSelectionModel().getSelectedNode();
                                                     var id = node.id.split(".");
                                                     var geomField = node.attributes.geomField;
@@ -1458,6 +1457,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     }
     createColumns = function () {
         var data = JSON.parse(localStorage.getItem(key)), response = data, validProperties = true, i;
+        if (!response) {
+            return;
+        }
         fieldsForStore = response.forStore;
         columnsForGrid = response.forGrid;
         type = response.type;
@@ -1612,6 +1614,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             //App.setAlert(App.STATUS_OK, "Start loading...");
         });
 
+        if (typeof handlerType === "undefined") {
+            return;
+        }
         drawControl = new OpenLayers.Control.DrawFeature(layer, handlerType, {
             featureAdded: function onInsert() {
                 var pos = grid.getStore().getCount() - 1;
