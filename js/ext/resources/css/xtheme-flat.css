@@ -341,7 +341,7 @@ ul.x-tab-strip-bottom{
 }
 
 .x-btn-tl, .x-btn-tr, .x-btn-tc, .x-btn-ml, .x-btn-mr, .x-btn-mc, .x-btn-bl, .x-btn-br, .x-btn-bc{
-    background-image:url(../images/flat/button/btn.png);
+    background-image:none;
 }
 
 .x-toolbar .x-btn td{
@@ -562,7 +562,7 @@ table.x-btn-pressed
 }
 
 .x-grid3-row td, .x-grid3-summary-row td{
-    font:normal 16px/13px arial, tahoma, helvetica, sans-serif;
+    font:normal 12px arial, tahoma, helvetica, sans-serif;
 }
 
 .x-grid3-hd-row td {
@@ -1851,4 +1851,25 @@ input.x-tree-node-cb{
 
 ul.x-tab-strip-top {
     border-bottom: 2px solid #aaa;
+}
+
+.x-btn-small {
+    background-color: #286090;
+    color: #ffffff;
+}
+
+.x-btn-small button {
+    color: #ffffff;
+}
+
+.x-toolbar .x-btn-small button {
+    color: #000000;
+}
+
+.x-toolbar .x-btn-small {
+    background-color: #ffffff;
+}
+
+.x-btn-pressed .x-btn-small {
+    background-color: #BBBBBB;
 }

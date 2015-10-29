@@ -10,36 +10,30 @@
 var appCache = window.applicationCache;
 
 
-function cStatus() {
-    appCache.update();
-    alert(appCache.status)
-    switch (appCache.status) {
-        case appCache.UNCACHED: // UNCACHED == 0
-            return 'UNCACHED';
-            break;
-        case appCache.IDLE: // IDLE == 1
-            return 'IDLE';
-            break;
-        case appCache.CHECKING: // CHECKING == 2
-            return 'CHECKING';
-            break;
-        case appCache.DOWNLOADING: // DOWNLOADING == 3
-            return 'DOWNLOADING';
-            break;
-        case appCache.UPDATEREADY:  // UPDATEREADY == 4
-            alert()
-            appCache.swapCache();
-            window.location.reload();
-            return 'UPDATEREADY';
-            break;
-        case appCache.OBSOLETE: // OBSOLETE == 5
-            return 'OBSOLETE';
-            break;
-        default:
-            return 'UKNOWN CACHE STATUS';
-            break;
+$(window).load(function () {
+    if (appCache) {
+        appCache.addEventListener('updateready', function (e) {
+            if (appCache.status === appCache.UPDATEREADY) {
+                // Browser downloaded a new app cache.
+                // Swap it in and reload the page to get the new hotness.
+                appCache.swapCache();
+                if (confirm('A new version of this App is available. Load it now?')) {
+                    window.location.reload();
+                }
+            } else {
+                // no manifest change..
+            }
+        }, false);
+
+        // if there is no update, display a message
+        appCache.addEventListener('noupdate', function (e) {
+
+            alert('App is up to date. ');
+
+        }, false);
+
     }
-}
+}, false);
 
 
 // In the following line, you should include the prefixes of implementations you want to test.
@@ -825,7 +819,7 @@ $(document).ready(function () {
                     mn.disable();
                 }
                 mp.setText("< Archive");
-                mn.setText("Select schema >");
+                mn.setText("Schema >");
                 break;
             case 2:
                 mp.enable();
@@ -840,7 +834,7 @@ $(document).ready(function () {
             case 3:
                 mp.enable();
                 mn.disable();
-                mp.setText("< Select schema");
+                mp.setText("< Schema");
                 mn.setText("");
                 break;
 

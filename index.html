@@ -2,7 +2,7 @@
 <html manifest="gc2collector.appcache">
 <head>
     <title>Administration</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <meta name="google" value="notranslate">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="description"
@@ -66,32 +66,6 @@
 <script type="text/javascript" src="js/comparisoncomboBox.js"></script>
 <script type="text/javascript" src="js/openlayers/proj4js-combined.js"></script>
 <!-- /build -->
-<script>
-    window.addEventListener('load', function(e) {
-        if (window.applicationCache) {
-            window.applicationCache.addEventListener('updateready', function(e) {
-                if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
-                    // Browser downloaded a new app cache.
-                    // Swap it in and reload the page to get the new hotness.
-                    window.applicationCache.swapCache();
-                    if (confirm('A new version of this App is available. Load it now?')) {
-                        window.location.reload();
-                    }
-                } else {
-                    // no manifest change..
-                }
-            }, false);
-
-            // if there is no update, display a message
-            window.applicationCache.addEventListener('noupdate', function(e) {
-
-                alert('App is up to date. ');
-
-            }, false);
-
-        }
-    }, false);
-</script>
 </body>
 </html>
 

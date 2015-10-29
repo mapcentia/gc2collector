@@ -1,5 +1,5 @@
 CACHE MANIFEST
-#Version 4
+#Version 1.1
 
 CACHE:
 js/wfseditor.js
@@ -51,6 +51,9 @@ js/ext/resources/images/default/tree/elbow-minus-nl.gif
 /api/v1/baselayerjs
 js/i18n/en_US.js
 js/i18n/da_Dk.js
+
+NETWORK:
+*
 
 FALLBACK:
 * index.html
