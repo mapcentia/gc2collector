@@ -8,9 +8,6 @@
 /*global gc2i18n:false */
 
 
-
-
-
 // In the following line, you should include the prefixes of implementations you want to test.
 window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
@@ -158,7 +155,7 @@ $(document).ready(function () {
                                     fillColor: "#000000",
                                     fillOpacity: 0.0,
                                     pointRadius: 8,
-                                    strokeColor: "#FF0000",
+                                    strokeColor: "#00FF00",
                                     strokeWidth: 3,
                                     strokeOpacity: 0.7,
                                     graphicZIndex: 3
@@ -787,7 +784,6 @@ $(document).ready(function () {
                 break;
             case 1:
                 mp.enable();
-                console.log(session)
                 if (session) {
                     mn.enable();
                 } else {
@@ -1088,13 +1084,13 @@ $(document).ready(function () {
 
                                                 }
                                             }
-                                        },
+                                        }/*,
                                         {
                                             text: "Check",
                                             handler: function () {
                                                 applicationCache.update();
                                             }
-                                        }
+                                        }*/
                                     ]
                                 }
                             }),
@@ -1102,6 +1098,36 @@ $(document).ready(function () {
                             new Ext.grid.GridPanel({
                                 id: "schemaGrid",
                                 border: false,
+                                listeners: {
+                                    activate: function (e) {
+                                        cardSwitch();
+                                    },
+                                    click: {
+                                        fn: function (e) {
+                                            var record = Ext.getCmp("schemaGrid").getSelectionModel().getSelections();
+                                            if (record.length === 0) {
+                                                App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
+                                                return false;
+                                            }
+                                            schema = record[0].data.schema;
+                                            sessionStorage.setItem("schema", schema);
+                                            if (offline) {
+                                                var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema));
+                                                if (!response) {
+                                                    alert("You've to start with the schema online before you can do it offline.");
+                                                    return;
+                                                } else {
+                                                    loadTree(response);
+                                                }
+                                            } else {
+                                                loadTree(null);
+                                            }
+                                            cards.setActiveItem(3);
+                                            setState();
+                                        },
+                                        scope: this
+                                    }
+                                },
                                 viewConfig: {
                                     forceFit: true
                                 },
@@ -1518,8 +1544,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                         value: 'null'
                     }),
                     symbolizer: {
-                        fillColor: "#000000",
-                        fillOpacity: 0.0,
+                        fillColor: "#FFFFFF",
+                        fillOpacity: 0.5,
                         strokeColor: "#FF0000",
                         strokeWidth: 2,
                         strokeDashstyle: "dash",
@@ -1534,9 +1560,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                         value: null
                     }),
                     symbolizer: {
-                        fillColor: "#000000",
-                        fillOpacity: 0.0,
-                        strokeColor: "#0000FF",
+                        fillColor: "#FFFFFF",
+                        fillOpacity: 0.5,
+                        strokeColor: "#00FF00",
                         strokeWidth: 3,
                         strokeOpacity: 0.7,
                         graphicZIndex: 3,
@@ -1549,9 +1575,9 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         var styleMap = new OpenLayers.StyleMap({
             "default": new OpenLayers.Style({
                     fillColor: "#000000",
-                    fillOpacity: 0.0,
-                    pointRadius: 5,
-                    strokeColor: "#0000FF",
+                    fillOpacity: 0,
+                    pointRadius: 12,
+                    strokeColor: "#00FF00",
                     strokeWidth: 3,
                     strokeOpacity: 0.7,
                     graphicZIndex: 3
@@ -1560,20 +1586,20 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
                 rules
             ),
             temporary: new OpenLayers.Style({
-                    fillColor: "#FFFFFF",
-                    fillOpacity: 0.7,
-                    pointRadius: 10,
-                    strokeColor: "#0000FF",
+                    fillColor: "#FF0000",
+                    fillOpacity: 0,
+                    pointRadius: 12,
+                    strokeColor: "#FF0000",
                     strokeWidth: 1,
                     strokeOpacity: 0.7,
                     graphicZIndex: 1
                 }
             ),
             select: new OpenLayers.Style({
-                    fillColor: "#000000",
-                    fillOpacity: 0.2,
+                    fillColor: "#00FF00",
+                    fillOpacity: 0,
                     pointRadius: 20,
-                    strokeColor: "#0000FF",
+                    strokeColor: "#00FF00",
                     strokeWidth: 3,
                     strokeOpacity: 1,
                     graphicZIndex: 3
