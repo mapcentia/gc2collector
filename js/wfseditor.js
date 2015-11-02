@@ -1134,34 +1134,6 @@ $(document).ready(function () {
                                 sm: new Ext.grid.RowSelectionModel({
                                     singleSelect: true
                                 }),
-                                tbar: [
-                                    {
-                                        text: "Select",
-                                        handler: function (e) {
-                                            var record = Ext.getCmp("schemaGrid").getSelectionModel().getSelections();
-                                            if (record.length === 0) {
-                                                App.setAlert(App.STATUS_NOTICE, __("You've to select a layer"));
-                                                return false;
-                                            }
-                                            schema = record[0].data.schema;
-                                            sessionStorage.setItem("schema", schema);
-                                            if (offline) {
-                                                var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema));
-                                                if (!response) {
-                                                    alert("You've to start with the schema online before you can do it offline.");
-                                                    return;
-                                                } else {
-                                                    loadTree(response);
-                                                }
-                                            } else {
-                                                loadTree(null);
-                                            }
-                                            cards.setActiveItem(3);
-                                            setState();
-
-                                        }
-                                    }
-                                ],
                                 store: schemasStore,
                                 cm: new Ext.grid.ColumnModel({
                                     defaults: {
@@ -1170,7 +1142,7 @@ $(document).ready(function () {
                                     },
                                     columns: [
                                         {
-                                            header: __("Schema"),
+                                            header: __("Select schema"),
                                             dataIndex: "schema",
                                             sortable: true
                                         }
