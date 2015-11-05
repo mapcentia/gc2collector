@@ -2252,7 +2252,8 @@ GeoExt.form.recordToField = function (i, q) {
                     el.next().set({
                         "accept": "image/*"
                     });
-                    el.insertSibling(new Ext.Element(document.createElement('img')));
+                    el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}));
+                    el.hide();
                 },
                 'fileselected': function (fb, v) {
                     var reader = new FileReader(), img = document.createElement("img"),
