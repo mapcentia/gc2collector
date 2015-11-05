@@ -1277,8 +1277,8 @@ a.x-menu-item {
 .x-menu-scroller-bottom {
     background-image:url(../images/default/layout/mini-bottom.gif);
 }
-.app-msg {
-    margin-top: 5px;
+#msg-div > div {
+    ma/rgin-bottom: 5px;
 }
 .x-box-tl {
     background-color: #aaa;
@@ -1303,13 +1303,15 @@ a.x-menu-item {
 .x-box-mc {
     background-color: #aaa;
     background-image:none;
-    font: normal 11px tahoma,arial,helvetica,sans-serif;
+    font: normal 16px tahoma,arial,helvetica,sans-serif;
     color: #fff;
+    opacity: 1 !important;
 }
 
 .x-box-mc h3 {
     font-size: 14px;
     font-weight: bold;
+    display: none;
 }
 
 .x-box-mr {
@@ -1879,4 +1881,15 @@ ul.x-tab-strip-top {
 }
 .x-grid3-cell {
     line-height: 25px !important;
+}
+.app-msg {
+    border: 2px solid rgba(0, 0, 0, .0);
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+}
+
+.app-msg div {
+    background-color: rgba(0,0,0,1);
+    opacity: 0.8
+
 }

@@ -282,4 +282,6 @@ html,input, select, textarea, button, a {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     -webkit-tap-highlight-color: transparent; /* For some Androids */
 }
-
+.image-textarea {
+    display: none !important;
+}

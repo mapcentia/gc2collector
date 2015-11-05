@@ -47,7 +47,7 @@ attributeForm.init = function (layer, geomtype) {
             }
         }
     });
-    createFilter = function() {
+    createFilter = function () {
         arr = JSON.parse(localStorage.getItem(key));
         if (!arr) {
             alert("You've to start editing the layer online before you can do it offline.");
@@ -148,13 +148,16 @@ attributeForm.init = function (layer, geomtype) {
             }
         });
     };
-    if (offline){
+    if (offline) {
         createFilter();
     } else {
         attributeForm.attributeStore.load();
 
     }
     attributeForm.form = new Ext.form.FormPanel({
+        listeners: {
+
+        },
         labelAlign: "top",
         autoScroll: true,
         region: 'center',
@@ -176,28 +179,24 @@ attributeForm.init = function (layer, geomtype) {
             new GeoExt.plugins.AttributeForm({
                 attributeStore: attributeForm.attributeStore
             })
-        ],
-        buttons: [
-            {
-                text: "<i class='icon-ok btn-gc'></i> " + __("Update table"),
-                handler: function () {
-                    if (attributeForm.form.form.isValid()) {
-                        var record = grid.getSelectionModel().getSelected();
-                        attributeForm.form.getForm().updateRecord(record);
-                        var feature = record.get("feature");
-                        if (feature.state !== OpenLayers.State.INSERT) {
-                            feature.state = OpenLayers.State.UPDATE;
-                        }
-                    } else {
-                        var s = '';
-                        Ext.iterate(detailForm.form.form.getValues(), function (key, value) {
-                            s += String.format("{0} = {1}<br />", key, value);
-                        }, this);
-                    }
-                }
-            }
         ]
     });
+    attributeForm.updateFeature = function(){
+        console.log("Updated grid");
+        if (attributeForm.form.form.isValid()) {
+            var record = grid.getSelectionModel().getSelected();
+            attributeForm.form.getForm().updateRecord(record);
+            var feature = record.get("feature");
+            if (feature.state !== OpenLayers.State.INSERT) {
+                feature.state = OpenLayers.State.UPDATE;
+            }
+        } else {
+            var s = '';
+            Ext.iterate(detailForm.form.form.getValues(), function (key, value) {
+                s += String.format("{0} = {1}<br />", key, value);
+            }, this);
+        }
+    };
 };
 function getFieldType(attrType) {
     "use strict";

@@ -2211,7 +2211,7 @@ GeoExt.form.recordToField = function (i, q) {
         }
     } else if (l.match(a.boolean)) {
         n = Ext.apply({
-            xtype:"checkbox",
+            xtype: "checkbox",
             anchor: "90%"
         }, h);
         var p = q.checkboxLabelProperty || "boxLabel";
@@ -2236,14 +2236,15 @@ GeoExt.form.recordToField = function (i, q) {
             buttonCfg: {
                 iconCls: 'upload-icon'
             },
+            cls: "image-textarea",
             listeners: {
                 'enable': function (cmp) {
                     var el = cmp.getEl();
-                    setTimeout(function() {
+                    setTimeout(function () {
                         try {
                             el.prev().set({"src": atob(el.getValue())});
-                        } catch(e){
-                            el.prev().set({"src":""});
+                        } catch (e) {
+                            el.prev().set({"src": ""});
                         }
                     }, 200);
                 },

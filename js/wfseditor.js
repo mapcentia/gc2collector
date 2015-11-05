@@ -1085,12 +1085,12 @@ $(document).ready(function () {
                                                 }
                                             }
                                         }/*,
-                                        {
-                                            text: "Check",
-                                            handler: function () {
-                                                applicationCache.update();
-                                            }
-                                        }*/
+                                         {
+                                         text: "Check",
+                                         handler: function () {
+                                         applicationCache.update();
+                                         }
+                                         }*/
                                     ]
                                 }
                             }),
@@ -1286,7 +1286,16 @@ $(document).ready(function () {
                                     {
                                         title: "Attribut",
                                         id: "attpanel",
-                                        layout: "fit"
+                                        layout: "fit",
+                                        listeners: {
+                                            deactivate: function (e) {
+                                                try {
+                                                    attributeForm.updateFeature();
+                                                } catch (e) {
+                                                }
+
+                                            }
+                                        }
                                     },
                                     {
                                         id: "attrtable",
