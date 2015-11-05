@@ -2240,7 +2240,11 @@ GeoExt.form.recordToField = function (i, q) {
                 'enable': function (cmp) {
                     var el = cmp.getEl();
                     setTimeout(function() {
-                        el.prev().set({"src": atob(el.getValue())});
+                        try {
+                            el.prev().set({"src": atob(el.getValue())});
+                        } catch(e){
+                            el.prev().set({"src":""});
+                        }
                     }, 200);
                 },
                 'afterrender': function (cmp) {
