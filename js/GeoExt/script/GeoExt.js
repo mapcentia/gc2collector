@@ -2182,12 +2182,13 @@ GeoExt.form.recordToField = function (i, q) {
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
             if (e) {
-                n = Ext.apply({xtype: "textfield", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textfield", anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
             } else {
-                n = Ext.apply({xtype: "textarea", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textarea", anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
             }
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
+                anchor: "90%",
                 store: arrStore,
                 editable: false,
                 triggerAction: 'all',
@@ -2198,9 +2199,10 @@ GeoExt.form.recordToField = function (i, q) {
         var j = g.maxInclusive !== undefined ? parseFloat(g.maxInclusive) : undefined;
         var m = g.minInclusive !== undefined ? parseFloat(g.minInclusive) : undefined;
         if (!arrStore) {
-            n = Ext.apply({xtype: "numberfield", fieldLabel: o, maxValue: j, minValue: m}, h)
+            n = Ext.apply({xtype: "numberfield", anchor: "90%", fieldLabel: o, maxValue: j, minValue: m}, h)
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
+                anchor: "90%",
                 store: arrStore,
                 editable: false,
                 triggerAction: 'all',
@@ -2208,11 +2210,15 @@ GeoExt.form.recordToField = function (i, q) {
             }), h)
         }
     } else if (l.match(a.boolean)) {
-        n = Ext.apply({xtype: "checkbox"}, h);
+        n = Ext.apply({
+            xtype:"checkbox",
+            anchor: "90%"
+        }, h);
         var p = q.checkboxLabelProperty || "boxLabel";
         n[p] = o
     } else if (l.match(a.date)) {
         n = Ext.apply(new Ext.form.DateField({
+            anchor: "90%",
             fieldLabel: o,
             convert: function (value, records) {
                 var rcptDate = new Date(value);
@@ -2222,6 +2228,7 @@ GeoExt.form.recordToField = function (i, q) {
     } else if (l.match(a.imageType)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
+            anchor: "90%",
             emptyText: 'Image byte string',
             fieldLabel: o,
             readOnly: false,
@@ -2230,32 +2237,40 @@ GeoExt.form.recordToField = function (i, q) {
                 iconCls: 'upload-icon'
             },
             listeners: {
+                'enable': function (cmp) {
+                    var el = cmp.getEl();
+                    setTimeout(function() {
+                        el.prev().set({"src": atob(el.getValue())});
+                    }, 200);
+                },
                 'afterrender': function (cmp) {
-                    cmp.getEl().next().set({
+                    var el = cmp.getEl();
+                    el.next().set({
                         "accept": "image/*"
                     });
+                    el.insertSibling(new Ext.Element(document.createElement('img')));
                 },
                 'fileselected': function (fb, v) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
-                            canvasResize(file, {
-                            width: 300,
-                            height: 0,
-                            crop: false,
-                            quality: 80,
-                            //rotate: 90,
-                            callback: function(data, width, height) {
-                                $("#" + fb.id).val(btoa(data));
-                                //$("#" + fb.id).val(data);
-                            }
-                        });
-
+                    canvasResize(file, {
+                        width: 300,
+                        height: 0,
+                        crop: false,
+                        quality: 80,
+                        //rotate: 90,
+                        callback: function (data, width, height) {
+                            $("#" + fb.id).val(btoa(data));
+                            fb.getEl().prev().set({"src": data});
+                        }
+                    });
                 }
             }
         }, h);
     } else if (l.match(a.base64Binary)) {
         n = Ext.apply({
             xtype: 'fileuploadfield',
+            anchor: "90%",
             emptyText: 'File byte string',
             fieldLabel: o,
             readOnly: false,
@@ -2265,7 +2280,7 @@ GeoExt.form.recordToField = function (i, q) {
             },
             listeners: {
                 'fileselected': function (fb, v) {
-                    var reader = new FileReader()
+                    var reader = new FileReader();
                     file = document.querySelector('#' + fb.fileInput.id).files[0];
                     reader.onloadend = function (e) {
                         $("#" + fb.id).val(btoa(reader.result));
@@ -2276,8 +2291,8 @@ GeoExt.form.recordToField = function (i, q) {
         }, h);
     }
     return n
-}
-;
+};
+
 GeoExt.form.recordToField.REGEXES = {
     text: new RegExp("^(text|string)$", "i"),
     number: new RegExp("^(number|float|decimal|double|int|long|integer|short)$", "i"),

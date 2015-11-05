@@ -168,7 +168,6 @@ attributeForm.init = function (layer, geomtype) {
             padding: '7px'
         },
         defaults: {
-            //width: 150,
             maxLengthText: "too long",
             minLengthText: "too short",
             anchor: '100%'

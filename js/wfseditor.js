@@ -1265,7 +1265,7 @@ $(document).ready(function () {
                                                 border: false,
                                                 id: "treepanel",
                                                 style: {
-                                                    height: (Ext.getBody().getViewSize().height - 120) + "px",
+                                                    height: (Ext.getBody().getViewSize().height - 155) + "px",
                                                     overflow: "auto"
                                                 },
                                                 collapsible: false
@@ -1287,7 +1287,6 @@ $(document).ready(function () {
                                         title: "Attribut",
                                         id: "attpanel",
                                         layout: "fit"
-
                                     },
                                     {
                                         id: "attrtable",
