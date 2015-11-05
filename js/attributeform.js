@@ -155,6 +155,7 @@ attributeForm.init = function (layer, geomtype) {
 
     }
     attributeForm.form = new Ext.form.FormPanel({
+        labelAlign: "top",
         autoScroll: true,
         region: 'center',
         viewConfig: {
