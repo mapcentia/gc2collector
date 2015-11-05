@@ -278,5 +278,8 @@ q:after, q:before {
 .plupload_scroll .plupload_filelist {
     height: 195px;
 }
-
+html,input, select, textarea, button, a {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent; /* For some Androids */
+}
 
