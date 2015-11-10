@@ -1792,6 +1792,7 @@ function stopEdit() {
     Ext.getCmp('editsavebutton').setDisabled(true);
     Ext.getCmp('editstopbutton').setDisabled(true);
     //Ext.getCmp('infobutton').setDisabled(true);
+    attributeForm.form.disable();
     try {
         drawControl.deactivate();
         layer.removeAllFeatures();
