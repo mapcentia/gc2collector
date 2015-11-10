@@ -580,7 +580,7 @@ $(document).ready(function () {
         },
         '->',
         {
-            text: __("Finish sketch"),
+            text: __("Finish"),
             id: "finishsketchbutton",
             disabled: true,
             handler: function(e){
@@ -1628,6 +1628,10 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
         });
         layer.events.register("loadstart", layer, function () {
             //App.setAlert(App.STATUS_OK, "Start loading...");
+        });
+
+        layer.events.register("sketchcomplete", layer, function () {
+            Ext.getCmp("finishsketchbutton").setDisabled(true);
         });
 
         layer.events.register("sketchmodified", layer, function(e, f){
