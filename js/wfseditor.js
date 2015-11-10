@@ -580,6 +580,16 @@ $(document).ready(function () {
         },
         '->',
         {
+            text: __("Finish sketch"),
+            id: "finishsketchbutton",
+            disabled: true,
+            handler: function(e){
+                drawControl.finishSketch();
+                e.setDisabled(true);
+            }
+        },
+        '-',
+        {
             text: "<i class='icon-screenshot btn-gc'></i> " + __(" "),
             handler: function () {
                 cloud.locate();
@@ -1620,6 +1630,18 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             //App.setAlert(App.STATUS_OK, "Start loading...");
         });
 
+        layer.events.register("sketchmodified", layer, function(e, f){
+            if (typeof e.feature.geometry.components !== "undefined") {
+                if (handlerType === OpenLayers.Handler.Polygon && e.feature.geometry.components[0].components.length > 4) {
+                    Ext.getCmp("finishsketchbutton").setDisabled(false);
+                }
+                else if (handlerType === OpenLayers.Handler.Path && e.feature.geometry.components.length > 2) {
+                    Ext.getCmp("finishsketchbutton").setDisabled(false);
+                } else {
+                    Ext.getCmp("finishsketchbutton").setDisabled(true);
+                }
+            }
+        });
         if (typeof handlerType === "undefined") {
             return;
         }
