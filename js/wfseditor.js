@@ -957,7 +957,12 @@ $(document).ready(function () {
                                             {
                                                 text: "Delete all",
                                                 handler: function(){
-                                                    deleteSyncedTransactions();
+                                                    if (confirm("You'll delete all synced records.")) {
+                                                        deleteSyncedTransactions();
+
+                                                    } else {
+                                                        return false;
+                                                    }
                                                 }
                                             }
                                         ],
