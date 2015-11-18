@@ -57,7 +57,7 @@ var App = new Ext.App({}), screenName, subUser, schema, cloud, gc2, layer, grid,
 $(document).ready(function () {
     'use strict';
     var bl = null, vArr1, vArr2, altId, lName, LayerNodeUI, layers = {}, sketchSymbolizers, currentActiveIndex, cards,
-        navHandler, cardSwitch, setState, loadArcivedData, syncTransactions, metaData, metaDataKeys = [],
+        navHandler, cardSwitch, setState, loadArcivedData, syncTransactions, deleteSyncedTransactions, metaData, metaDataKeys = [],
         metaDataKeysTitle = [], metaDataRealKeys = [], extent = null, gc2, clicktimer;
 
     cloud = new mygeocloud_ol.map(null, screenName, {
@@ -583,7 +583,7 @@ $(document).ready(function () {
             text: __("Finish"),
             id: "finishsketchbutton",
             disabled: true,
-            handler: function(e){
+            handler: function (e) {
                 drawControl.finishSketch();
                 e.setDisabled(true);
             }
@@ -947,6 +947,7 @@ $(document).ready(function () {
                                         })
                                     }),
                                     new Ext.grid.GridPanel({
+                                        id: "synced",
                                         title: "Synced",
                                         border: false,
                                         viewConfig: {
@@ -954,7 +955,10 @@ $(document).ready(function () {
                                         },
                                         tbar: [
                                             {
-                                                text: "Delete all"
+                                                text: "Delete all",
+                                                handler: function(){
+                                                    deleteSyncedTransactions();
+                                                }
                                             }
                                         ],
                                         store: syncedStore,
@@ -1425,6 +1429,22 @@ $(document).ready(function () {
 
 
     };
+    deleteSyncedTransactions = function () {
+        var objectStore = getTransactionStore();
+        objectStore.openCursor().onsuccess = function(event) {
+            var cursor = event.target.result;
+            if (cursor) {
+                if (cursor.value.synced ===2){
+                    cursor.delete();
+                    console.log("Delete");
+                }
+                cursor.continue();
+            }
+            else {
+                loadArcivedData();
+            }
+        };
+    };
 
     // Set and check session when refreshing the browser
     session = sessionStorage.getItem("session");
@@ -1634,7 +1654,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             Ext.getCmp("finishsketchbutton").setDisabled(true);
         });
 
-        layer.events.register("sketchmodified", layer, function(e, f){
+        layer.events.register("sketchmodified", layer, function (e, f) {
             if (typeof e.feature.geometry.components !== "undefined") {
                 if (handlerType === OpenLayers.Handler.Polygon && e.feature.geometry.components[0].components.length > 4) {
                     Ext.getCmp("finishsketchbutton").setDisabled(false);
