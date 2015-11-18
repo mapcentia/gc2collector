@@ -959,7 +959,6 @@ $(document).ready(function () {
                                                 handler: function(){
                                                     if (confirm("You'll delete all synced records.")) {
                                                         deleteSyncedTransactions();
-
                                                     } else {
                                                         return false;
                                                     }
