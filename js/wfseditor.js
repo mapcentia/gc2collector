@@ -48,11 +48,9 @@ Ext.QuickTips.init();
 Ext.Ajax.withCredentials = true;
 var App = new Ext.App({}), screenName, subUser, schema, cloud, gc2, layer, grid, store, map, wfsTools, viewport,
     drawControl, gridPanel, modifyControl, tree, loadTree, reLoadTree, layerBeingEditing,
-    layerBeingEditingGeomField, saveStrategy, getMetaData, searchWin, placeMarkers, placePopup,
-    measureControls, extentRestrictLayer, currentId, mapTools, qstore = [], queryWin, tbar, quickDrawMode,
-    schemasStore, notSyncedStore, syncedStore, createLayer, offline = false, session, localStoreKey,
-    host = "";
-
+    layerBeingEditingGeomField, saveStrategy, getMetaData, extentRestrictLayer, currentId, qstore = [],
+    queryWin, tbar, quickDrawMode, schemasStore, notSyncedStore, syncedStore, createLayer, offline = false,
+    session, localStoreKey, host = "", initExtent = null;
 
 $(document).ready(function () {
     'use strict';
@@ -302,7 +300,7 @@ $(document).ready(function () {
     }
     LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
 
-    loadTree = function (meta) {
+    loadTree = function (meta, settings) {
         var treeConfig = [
             {
                 id: "baselayers",
@@ -533,6 +531,43 @@ $(document).ready(function () {
                 }
             });
         }
+        if (settings) {
+            if (typeof settings.extents !== "undefined") {
+                if (settings.extents[schema] !== undefined) {
+                    cloud.map.zoomToExtent(settings.extents[schema], false);
+                }
+            }
+            if (typeof settings.extentrestricts !== "undefined") {
+                if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
+                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
+                }
+            }
+        } else {
+            $.ajax({
+                url: '/controllers/setting',
+                dataType: 'json',
+                type: 'GET',
+
+                success: function (data) {
+                    settings = data.data;
+                    if (typeof settings.extents !== "undefined") {
+                        if (settings.extents[schema] !== undefined) {
+                            cloud.map.zoomToExtent(settings.extents[schema], false);
+                        }
+                    }
+                    if (typeof settings.extentrestricts !== "undefined") {
+                        if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
+                            extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
+                        }
+                    }
+                    settings.api_key = null;
+                    settings.pw = null;
+                    settings.api_key_subuser = null;
+                    settings.pw_subuser = null;
+                    localStorage.setItem("settings." + host + "." + localStoreKey + "." + schema, JSON.stringify(settings));
+                }
+            });
+        }
     };
     wfsTools = [
         new GeoExt.Action({
@@ -600,129 +635,6 @@ $(document).ready(function () {
         }
 
     ];
-    mapTools = [
-        {
-            text: "<i class='icon-resize-vertical btn-gc'></i> " + __("Measure"),
-            menu: new Ext.menu.Menu({
-                items: [
-                    {
-                        text: __('Distance'),
-                        handler: function () {
-                            openMeasureWin();
-                            measureControls.polygon.deactivate();
-                            measureControls.line.activate();
-                        }
-                    },
-                    {
-                        text: __('Area'),
-                        handler: function () {
-                            openMeasureWin();
-                            measureControls.line.deactivate();
-                            measureControls.polygon.activate();
-                        }
-                    }
-
-                ]
-            })
-        },
-        '-',
-        {
-            text: "<i class='icon-globe btn-gc'></i> " + __("Save extent"),
-            id: "extentbutton",
-            disabled: false,
-            handler: function () {
-                Ext.Ajax.request({
-                    url: '/controllers/setting/extent/',
-                    method: 'put',
-                    params: Ext.util.JSON.encode({
-                        data: {
-                            schema: schema,
-                            extent: cloud.getExtent(),
-                            zoom: cloud.getZoom(),
-                            center: [cloud.getCenter().x, cloud.getCenter().y]
-                        }
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8'
-                    },
-                    success: function (response) {
-                        // window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
-                    },
-                    failure: function (response) {
-                        Ext.MessageBox.show({
-                            title: 'Failure',
-                            msg: __(Ext.decode(response.responseText).message),
-                            buttons: Ext.MessageBox.OK,
-                            width: 400,
-                            height: 300,
-                            icon: Ext.MessageBox.ERROR
-                        });
-                    }
-                });
-            }
-        }, '-',
-        {
-            text: "<i class='icon-lock btn-gc'></i> " + __("Lock extent"),
-            id: "extentlockbutton",
-            enableToggle: true,
-            tooltip: __('Lock the map extent for sub-users in Admin and for all users in the public Viewer.'),
-            disabled: subUser ? true : false,
-            pressed: false,
-            handler: function () {
-                window.parent.extentRestricted = this.pressed;
-                if (window.parent.extentRestricted) {
-                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(cloud.map.getExtent().toGeometry()));
-                }
-                else {
-                    extentRestrictLayer.destroyFeatures();
-                }
-                Ext.Ajax.request({
-                    url: '/controllers/setting/extentrestrict/',
-                    method: 'put',
-                    params: Ext.util.JSON.encode({
-                        data: {
-                            schema: schema,
-                            extent: null,
-                            zoom: null
-                        }
-                    }),
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8'
-                    },
-                    success: function (response) {
-                        // window.parent.App.setAlert(App.STATUS_NOTICE, __(Ext.decode(response.responseText).message));
-                    },
-                    failure: function (response) {
-                        Ext.MessageBox.show({
-                            title: 'Failure',
-                            msg: __(Ext.decode(response.responseText).message),
-                            buttons: Ext.MessageBox.OK,
-                            width: 400,
-                            height: 300,
-                            icon: Ext.MessageBox.ERROR
-                        });
-                    }
-                });
-            }
-        },
-        '-',
-        {
-            text: "<i class='icon-th-list btn-gc'></i> " + __("Attributes"),
-            id: "infobutton",
-            disabled: true,
-            handler: function () {
-                //attributeForm.win.show();
-
-
-            }
-        },
-        '-',
-        {
-            text: "<i class='icon-screenshot btn-gc'></i> " + __("Locate me"),
-            handler: function () {
-                cloud.locate();
-            }
-        }];
     reLoadTree = function () {
         loadTree();
     };
@@ -1133,12 +1045,13 @@ $(document).ready(function () {
                                             schema = record[0].data.schema;
                                             sessionStorage.setItem("schema", schema);
                                             if (offline) {
-                                                var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema));
+                                                var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema)),
+                                                    settings = JSON.parse(localStorage.getItem("settings." + host + "." + localStoreKey + "." + schema));
                                                 if (!response) {
                                                     alert("You've to start with the schema online before you can do it offline.");
                                                     return;
                                                 } else {
-                                                    loadTree(response);
+                                                    loadTree(response, settings);
                                                 }
                                             } else {
                                                 loadTree(null);
@@ -1472,7 +1385,10 @@ $(document).ready(function () {
             "success": true,
             "data": JSON.parse(localStorage.getItem("schemas." + host + "." + localStoreKey))
         });
-        loadTree(JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema)));
+        loadTree(
+            JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema)),
+            JSON.parse(localStorage.getItem("settings." + host + "." + localStoreKey + "." + schema))
+        );
         setState();
     } else {
         Ext.getCmp("cards").layout.setActiveItem(1);
@@ -1480,16 +1396,8 @@ $(document).ready(function () {
     }
 
     // Add touch event to buttons
-    $(".x-btn-small").on('touchstart', function (e) {
-        $(this).css("background-color", "#bbbbbb");
-    }).on('touchend', function (e) {
-        $(this).css("background-color", "#286090");
-    });
-    $(".x-panel-bbar .x-btn-small,.x-panel-tbar .x-btn-small").on('touchstart', function (e) {
-        $(this).css("background-color", "#bbbbbb");
-    }).on('touchend', function (e) {
-        $(this).css("background-color", "inherit");
-    });
+    addTouch();
+
 });
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';
@@ -1815,6 +1723,8 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             }
         });
     }
+    // Add touch event to buttons, which wasn't rendered on app load.
+    addTouch();
 }
 function stopEdit() {
     "use strict";
@@ -1964,20 +1874,18 @@ saveStrategy = new OpenLayers.Strategy.Save({
     }
 });
 
-function toggleFullScreen() {
-    var doc = window.document;
-    var docEl = doc.documentElement;
-
-    var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-    var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
-
-    if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-        requestFullScreen.call(docEl);
-    }
-    else {
-        cancelFullScreen.call(doc);
-    }
-}
-toggleFullScreen()
+// Function for adding thouch events to buttons for responsive feedback. Extjs3 isn't touch enabled.
+var addTouch = function () {
+    $(".x-btn-small").on('touchstart', function (e) {
+        $(this).css("background-color", "#bbbbbb");
+    }).on('touchend', function (e) {
+        $(this).css("background-color", "#286090");
+    });
+    $(".x-panel-bbar .x-btn-small,.x-panel-tbar .x-btn-small").on('touchstart', function (e) {
+        $(this).css("background-color", "#bbbbbb");
+    }).on('touchend', function (e) {
+        $(this).css("background-color", "inherit");
+    });
+};
 
 
