@@ -306,7 +306,18 @@ $(document).ready(function () {
                 id: "baselayers",
                 nodeType: "gx_baselayercontainer"
             }
-        ];
+        ], setMapExtent = function(settings) {
+            if (typeof settings.extents !== "undefined") {
+                if (settings.extents[schema] !== undefined) {
+                    cloud.map.zoomToExtent(settings.extents[schema], false);
+                }
+            }
+            if (typeof settings.extentrestricts !== "undefined") {
+                if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
+                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
+                }
+            }
+        };
         var createTree = function (response) {
             var groups = [], isBaseLayer;
             if (response.data !== undefined) {
@@ -532,16 +543,7 @@ $(document).ready(function () {
             });
         }
         if (settings) {
-            if (typeof settings.extents !== "undefined") {
-                if (settings.extents[schema] !== undefined) {
-                    cloud.map.zoomToExtent(settings.extents[schema], false);
-                }
-            }
-            if (typeof settings.extentrestricts !== "undefined") {
-                if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
-                    extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
-                }
-            }
+            setMapExtent(settings);
         } else {
             $.ajax({
                 url: '/controllers/setting',
@@ -549,17 +551,8 @@ $(document).ready(function () {
                 type: 'GET',
 
                 success: function (data) {
-                    settings = data.data;
-                    if (typeof settings.extents !== "undefined") {
-                        if (settings.extents[schema] !== undefined) {
-                            cloud.map.zoomToExtent(settings.extents[schema], false);
-                        }
-                    }
-                    if (typeof settings.extentrestricts !== "undefined") {
-                        if (settings.extentrestricts[schema] !== undefined && settings.extentrestricts[schema] !== null) {
-                            extentRestrictLayer.addFeatures(new OpenLayers.Feature.Vector(OpenLayers.Bounds.fromArray(settings.extentrestricts[schema]).toGeometry()));
-                        }
-                    }
+                    var settings = data.data;
+                    setMapExtent(settings);
                     settings.api_key = null;
                     settings.pw = null;
                     settings.api_key_subuser = null;
