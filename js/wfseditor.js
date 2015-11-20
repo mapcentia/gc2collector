@@ -14,7 +14,7 @@ window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || 
 window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 
 if (!window.indexedDB) {
-    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+    window.alert("Your browser doesn't support a stable version of IndexedDB. This app depend on the HTML5 feature.");
 }
 
 var indexedDb, request = window.indexedDB.open("gc2", 4);
@@ -603,7 +603,6 @@ $(document).ready(function () {
             disabled: true,
             id: "editsavebutton",
             handler: function () {
-                // alert(layer.features.length);
                 if (modifyControl.feature) {
                     modifyControl.selectControl.unselectAll();
                 }
@@ -978,7 +977,7 @@ $(document).ready(function () {
                                                             schemasStore.load();
                                                         },
                                                         failure: function () {
-                                                            alert("Could not log in");
+                                                            alert("Could not log in. Check user name and password.");
                                                         }
                                                     });
                                                 }
@@ -1011,7 +1010,7 @@ $(document).ready(function () {
                                                         });
 
                                                     } else {
-                                                        alert("You login online first");
+                                                        alert("You've to login online first, before you can use offline mode.");
                                                         return;
                                                     }
 
@@ -1048,7 +1047,7 @@ $(document).ready(function () {
                                                 var response = JSON.parse(localStorage.getItem("meta." + host + "." + localStoreKey + "." + schema)),
                                                     settings = JSON.parse(localStorage.getItem("settings." + host + "." + localStoreKey + "." + schema));
                                                 if (!response) {
-                                                    alert("You've to start with the schema online before you can do it offline.");
+                                                    alert("You've to start with the schema online, before you can use it in offline mode.");
                                                     return;
                                                 } else {
                                                     loadTree(response, settings);
