@@ -115,8 +115,7 @@ $(document).ready(function () {
         var layers, count = 0, hit = false, event = new geocloud.clickEvent(e, cloud), distance, db = screenName;
         if (clicktimer) {
             clearTimeout(clicktimer);
-        }
-        else {
+        } else {
             clicktimer = setTimeout(function (e) {
                 clicktimer = undefined;
                 var coords = event.getCoordinate();
@@ -124,8 +123,7 @@ $(document).ready(function () {
                     try {
                         st.reset();
                         gc2.removeGeoJsonStore(st);
-                    }
-                    catch (e) {
+                    } catch (e) {
 
                     }
                 });
@@ -465,6 +463,11 @@ $(document).ready(function () {
                                         });
                                     }
                                 });
+                            });
+                            $(".leaf-tools").on('touchstart', function (e) {
+                                $(this).css("background-color", "#bbb");
+                            }).on('touchend', function (e) {
+                                $(this).css("background-color", "inherit");
                             });
                         }
                     }
@@ -956,7 +959,7 @@ $(document).ready(function () {
                                         tbar: [
                                             {
                                                 text: "Delete all",
-                                                handler: function(){
+                                                handler: function () {
                                                     if (confirm("You'll delete all synced records.")) {
                                                         deleteSyncedTransactions();
                                                     } else {
@@ -1435,10 +1438,10 @@ $(document).ready(function () {
     };
     deleteSyncedTransactions = function () {
         var objectStore = getTransactionStore();
-        objectStore.openCursor().onsuccess = function(event) {
+        objectStore.openCursor().onsuccess = function (event) {
             var cursor = event.target.result;
             if (cursor) {
-                if (cursor.value.synced ===2){
+                if (cursor.value.synced === 2) {
                     cursor.delete();
                     console.log("Delete");
                 }
@@ -1475,6 +1478,18 @@ $(document).ready(function () {
         Ext.getCmp("cards").layout.setActiveItem(1);
         setState();
     }
+
+    // Add touch event to buttons
+    $(".x-btn-small").on('touchstart', function (e) {
+        $(this).css("background-color", "#bbbbbb");
+    }).on('touchend', function (e) {
+        $(this).css("background-color", "#286090");
+    });
+    $(".x-panel-bbar .x-btn-small,.x-panel-tbar .x-btn-small").on('touchstart', function (e) {
+        $(this).css("background-color", "#bbbbbb");
+    }).on('touchend', function (e) {
+        $(this).css("background-color", "inherit");
+    });
 });
 function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     'use strict';

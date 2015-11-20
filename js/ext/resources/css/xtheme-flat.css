@@ -358,7 +358,7 @@ ul.x-tab-strip-bottom{
 }
 table.x-btn-pressed
 {
-    background-color: #5DC0DE;
+    background-color: #BBBBBB;
 }
 
 .x-btn-disabled *{
@@ -977,7 +977,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-tree-node a span, .x-dd-drag-ghost a span{
     color:#000;
-    line-height: 28px;
+    line-height: 25px;
 }
 
 .x-tree-node .x-tree-node-disabled a span{
@@ -1892,4 +1892,7 @@ ul.x-tab-strip-top {
     background-color: rgba(0,0,0,1);
     opacity: 0.8
 
+}
+.leaf-tools i {
+    margin-left: 3px;
 }
