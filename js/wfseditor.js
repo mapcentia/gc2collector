@@ -47,7 +47,7 @@ Ext.QuickTips.init();
 
 Ext.Ajax.withCredentials = true;
 var App = new Ext.App({}), screenName, subUser, schema, cloud, gc2, layer, grid, store, map, wfsTools, viewport,
-    drawControl, gridPanel, modifyControl, tree, loadTree, reLoadTree, layerBeingEditing,
+    drawControl, gridPanel, modifyControl, tree, loadTree, layerBeingEditing,
     layerBeingEditingGeomField, saveStrategy, getMetaData, extentRestrictLayer, currentId, qstore = [],
     queryWin, tbar, quickDrawMode, schemasStore, notSyncedStore, syncedStore, createLayer, offline = false,
     session, localStoreKey, host = "", initExtent = null;
@@ -183,6 +183,12 @@ $(document).ready(function () {
                                         title: layerTitel,
                                         layout: "fit",
                                         border: false,
+                                        listeners: {
+                                            activate: function (e) {
+                                                // Add touch to buttons.
+                                                addTouch();
+                                            }
+                                        },
                                         items: [
                                             {
                                                 xtype: "panel",
@@ -217,6 +223,7 @@ $(document).ready(function () {
                                                                 Ext.getCmp("attpanel").add(attributeForm.form);
                                                                 Ext.getCmp("attpanel").doLayout();
                                                                 Ext.getCmp("mainTabs").activate(activeTab);
+                                                                // Add touch event to buttons
                                                                 attributeForm.form.disable();
                                                                 startWfsEdition(table, geoField, filter, true);
                                                                 Ext.iterate(qstore, function (v) {
@@ -239,6 +246,8 @@ $(document).ready(function () {
                                         ]
                                     }
                                 );
+
+
                                 hit = true;
                             }
                             if (!hit) {
@@ -628,9 +637,7 @@ $(document).ready(function () {
         }
 
     ];
-    reLoadTree = function () {
-        loadTree();
-    };
+
     sketchSymbolizers = {
         "Point": {
             pointRadius: 4,
@@ -1143,6 +1150,8 @@ $(document).ready(function () {
                                                                 Ext.getCmp("attpanel").add(attributeForm.form);
                                                                 Ext.getCmp("attpanel").doLayout();
                                                                 Ext.getCmp("mainTabs").activate(activeTab);
+                                                                // Add touch event to buttons
+                                                                addTouch();
                                                                 attributeForm.form.disable();
                                                             }
                                                             else {
