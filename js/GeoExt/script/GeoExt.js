@@ -2260,7 +2260,7 @@ GeoExt.form.recordToField = function (i, q) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
                     canvasResize(file, {
-                        width: "800",
+                        width: "1024",
                         height: 0,
                         crop: false,
                         quality: 80,
