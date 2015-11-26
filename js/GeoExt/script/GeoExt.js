@@ -2642,7 +2642,7 @@ GeoExt.data.AttributeStoreMixin = function () {
                     disableCaching: false,
                     method: "GET"
                 }) : undefined),
-                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", {
+                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", "label", {
                     name: "nillable",
                     type: "boolean"
                 }])
