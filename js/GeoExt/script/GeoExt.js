@@ -2182,9 +2182,9 @@ GeoExt.form.recordToField = function (i, q) {
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
             if (e) {
-                n = Ext.apply({xtype: "textfield", anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textfield", allowBlank: c, anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
             } else {
-                n = Ext.apply({xtype: "textarea", anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({xtype: "textarea", allowBlank: c, anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
             }
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
@@ -2192,6 +2192,7 @@ GeoExt.form.recordToField = function (i, q) {
                 store: arrStore,
                 editable: false,
                 triggerAction: 'all',
+                allowBlank: c,
                 fieldLabel: o, maxLength: e, minLength: f
             }), h)
         }
@@ -2199,7 +2200,7 @@ GeoExt.form.recordToField = function (i, q) {
         var j = g.maxInclusive !== undefined ? parseFloat(g.maxInclusive) : undefined;
         var m = g.minInclusive !== undefined ? parseFloat(g.minInclusive) : undefined;
         if (!arrStore) {
-            n = Ext.apply({xtype: "numberfield", anchor: "90%", fieldLabel: o, maxValue: j, minValue: m}, h)
+            n = Ext.apply({xtype: "numberfield", allowBlank: c, anchor: "90%", fieldLabel: o, maxValue: j, minValue: m}, h)
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
                 anchor: "90%",
@@ -2218,6 +2219,7 @@ GeoExt.form.recordToField = function (i, q) {
         n[p] = o
     } else if (l.match(a.date)) {
         n = Ext.apply(new Ext.form.DateField({
+            allowBlank: c,
             anchor: "90%",
             fieldLabel: o,
             convert: function (value, records) {
@@ -2230,6 +2232,7 @@ GeoExt.form.recordToField = function (i, q) {
             xtype: 'fileuploadfield',
             anchor: "90%",
             emptyText: 'Image byte string',
+            allowBlank: c,
             fieldLabel: o,
             readOnly: false,
             buttonText: '',
@@ -2280,6 +2283,7 @@ GeoExt.form.recordToField = function (i, q) {
             emptyText: 'File byte string',
             fieldLabel: o,
             readOnly: false,
+            allowBlank: c,
             buttonText: '',
             buttonCfg: {
                 iconCls: 'upload-icon'

@@ -315,7 +315,7 @@ $(document).ready(function () {
                 id: "baselayers",
                 nodeType: "gx_baselayercontainer"
             }
-        ], setMapExtent = function(settings) {
+        ], setMapExtent = function (settings) {
             if (typeof settings.extents !== "undefined") {
                 if (settings.extents[schema] !== undefined) {
                     cloud.map.zoomToExtent(settings.extents[schema], false);
@@ -603,11 +603,15 @@ $(document).ready(function () {
             disabled: true,
             id: "editsavebutton",
             handler: function () {
-                if (modifyControl.feature) {
-                    modifyControl.selectControl.unselectAll();
+                if (attributeForm.form.form.isValid()) {
+                    if (modifyControl.feature) {
+                        modifyControl.selectControl.unselectAll();
+                    }
+                    store.commitChanges();
+                    saveStrategy.save();
+                } else {
+                    Ext.getCmp("mainTabs").activate(2);
                 }
-                store.commitChanges();
-                saveStrategy.save();
             }
         },
         '-',
