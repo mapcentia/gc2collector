@@ -2182,9 +2182,23 @@ GeoExt.form.recordToField = function (i, q) {
         var f = g.minLength !== undefined ? parseFloat(g.minLength) : undefined;
         if (!arrStore) {
             if (e) {
-                n = Ext.apply({xtype: "textfield", allowBlank: c, anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({
+                    xtype: "textfield",
+                    allowBlank: c,
+                    anchor: "90%",
+                    fieldLabel: o,
+                    maxLength: e,
+                    minLength: f
+                }, h);
             } else {
-                n = Ext.apply({xtype: "textarea", allowBlank: c, anchor: "90%", fieldLabel: o, maxLength: e, minLength: f}, h);
+                n = Ext.apply({
+                    xtype: "textarea",
+                    allowBlank: c,
+                    anchor: "90%",
+                    fieldLabel: o,
+                    maxLength: e,
+                    minLength: f
+                }, h);
             }
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
@@ -2200,7 +2214,14 @@ GeoExt.form.recordToField = function (i, q) {
         var j = g.maxInclusive !== undefined ? parseFloat(g.maxInclusive) : undefined;
         var m = g.minInclusive !== undefined ? parseFloat(g.minInclusive) : undefined;
         if (!arrStore) {
-            n = Ext.apply({xtype: "numberfield", allowBlank: c, anchor: "90%", fieldLabel: o, maxValue: j, minValue: m}, h)
+            n = Ext.apply({
+                xtype: "numberfield",
+                allowBlank: c,
+                anchor: "90%",
+                fieldLabel: o,
+                maxValue: j,
+                minValue: m
+            }, h)
         } else {
             n = Ext.apply(new Ext.form.ComboBox({
                 anchor: "90%",
@@ -2228,6 +2249,7 @@ GeoExt.form.recordToField = function (i, q) {
             }
         }), h)
     } else if (l.match(a.imageType)) {
+        console.log(i.get("quality"))
         n = Ext.apply({
             xtype: 'fileuploadfield',
             anchor: "90%",
@@ -2263,10 +2285,10 @@ GeoExt.form.recordToField = function (i, q) {
                     var reader = new FileReader(), img = document.createElement("img"),
                         file = document.querySelector('#' + fb.fileInput.id).files[0];
                     canvasResize(file, {
-                        width: "1024",
+                        width: i.get("width") || "1024",
                         height: 0,
                         crop: false,
-                        quality: 80,
+                        quality: i.get("quality") || 80,
                         //rotate: 90,
                         callback: function (data, width, height) {
                             $("#" + fb.id).val(btoa(data));
@@ -2646,7 +2668,7 @@ GeoExt.data.AttributeStoreMixin = function () {
                     disableCaching: false,
                     method: "GET"
                 }) : undefined),
-                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", "label", {
+                reader: new GeoExt.data.AttributeReader(a, a.fields || ["name", "type", "restriction", "label", "width", "quality", {
                     name: "nillable",
                     type: "boolean"
                 }])

@@ -39,7 +39,9 @@ attributeForm.init = function (layer, geomtype) {
                             name: record.get("name"),
                             restriction: record.get("restriction"),
                             nillable: record.get("nillable"),
-                            label: record.get("label")
+                            label: record.get("label"),
+                            width: record.get("width"),
+                            quality: record.get("quality")
                         });
                     }, this);
                     localStorage.setItem(key, JSON.stringify(arr));
@@ -66,7 +68,9 @@ attributeForm.init = function (layer, geomtype) {
                     type: arr[i].type,
                     restriction: arr[i].restriction,
                     nillable: arr[i].nillable,
-                    label: arr[i].label
+                    label: arr[i].label,
+                    width: arr[i].width,
+                    quality: arr[i].quality
                 };
                 var newRecord = new attributeForm.attributeStore.recordType(newDataRow);
                 attributeForm.attributeStoreCopy.add(newRecord);
