@@ -602,7 +602,13 @@ $(document).ready(function () {
             text: "<i class='icon-stop btn-gc'></i> " + __(""),
             disabled: true,
             id: "editstopbutton",
-            handler: stopEdit
+            handler: function () {
+                if (confirm(__("All not saved sketches will be deleted. Continue?"))) {
+                    stopEdit();
+                } else {
+                    return false;
+                }
+            }
         },
         '->',
         {
