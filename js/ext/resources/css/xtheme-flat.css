@@ -1380,6 +1380,7 @@ a.x-menu-item {
 
 .x-combo-list-item {
     border-color:#fff;
+    padding: 7px;
 }
 
 .x-combo-list .x-combo-selected{

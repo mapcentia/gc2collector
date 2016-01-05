@@ -2206,9 +2206,31 @@ GeoExt.form.recordToField = function (i, q) {
                 store: arrStore,
                 editable: false,
                 triggerAction: 'all',
+                listeners : {
+                    expand: function(){
+                        addTouch();
+                    }
+                },
                 allowBlank: c,
                 fieldLabel: o, maxLength: e, minLength: f
             }), h)
+
+    /*        var buf = [];
+            buf.push('<option>aA1</option>');
+            buf.push('<option>aA2</option>');
+            buf.push('<option>bA3</option>');
+            buf.push('<option>cA4</option>');
+
+            var items = buf.join('');*/
+
+         /*   n = Ext.apply(new Ext.Component({
+                autoEl: {
+                    tag:'div',
+                    tabindex: '-1',
+                    cls:'x-form-item ',
+                    html: '<div class="x-form-element"><div class="x-form-field-wrap x-form-field-trigger-wrap"><input class="x-form-text x-form-field x-trigger-noedit" name="url"/></div><div>'
+                }
+            }), h)*/
         }
     } else if (l.match(a.number)) {
         var j = g.maxInclusive !== undefined ? parseFloat(g.maxInclusive) : undefined;
@@ -2249,7 +2271,6 @@ GeoExt.form.recordToField = function (i, q) {
             }
         }), h)
     } else if (l.match(a.imageType)) {
-        console.log(i.get("quality"))
         n = Ext.apply({
             xtype: 'fileuploadfield',
             anchor: "90%",

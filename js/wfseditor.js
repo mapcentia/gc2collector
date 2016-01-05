@@ -141,7 +141,7 @@ $(document).ready(function () {
                             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
                             1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
-                        distance = 10 * res[cloud.getZoom()];
+                        distance = 15 * res[cloud.getZoom()];
                     }
                     qstore[index] = new geocloud.sqlStore({
                         db: db,
@@ -599,6 +599,13 @@ $(document).ready(function () {
         },
         '-',
         {
+            text: "<i class='icon-stop btn-gc'></i> " + __(""),
+            disabled: true,
+            id: "editstopbutton",
+            handler: stopEdit
+        },
+        '->',
+        {
             text: "<i class='icon-ok btn-gc'></i> " + __(""),
             disabled: true,
             id: "editsavebutton",
@@ -615,13 +622,6 @@ $(document).ready(function () {
             }
         },
         '-',
-        {
-            text: "<i class='icon-stop btn-gc'></i> " + __(""),
-            disabled: true,
-            id: "editstopbutton",
-            handler: stopEdit
-        },
-        '->',
         {
             text: __("Finish"),
             id: "finishsketchbutton",
@@ -1886,6 +1886,13 @@ var addTouch = function () {
     }).on('touchend', function (e) {
         $(this).css("background-color", "#286090");
     });
+
+    $(".x-combo-list-item").on('touchmove', function (e) {
+        $(this).css("background-color", "#bbbbbb");
+    }).on('touchend', function (e) {
+        $(this).css("background-color", "#ffffff");
+    });
+
     $(".x-panel-bbar .x-btn-small,.x-panel-tbar .x-btn-small").on('touchstart', function (e) {
         $(this).css("background-color", "#bbbbbb");
     }).on('touchend', function (e) {
