@@ -200,16 +200,8 @@ $(document).ready(function () {
                                                         text: "<i class='icon-pencil btn-gc'></i> Edit feature #" + pkeyValue,
                                                         handler: function () {
                                                             if (geoType === "GEOMETRY" || geoType === "RASTER") {
-                                                                Ext.MessageBox.show({
-                                                                    title: 'No geometry type on layer',
-                                                                    msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                                    buttons: Ext.MessageBox.OK,
-                                                                    width: 400,
-                                                                    height: 300,
-                                                                    icon: Ext.MessageBox.ERROR
-                                                                });
+                                                                alert(__("The layer has no geometry type. Set it in GC2 Admin"));
                                                                 return false;
-
                                                             }
                                                             else {
                                                                 var filter = new OpenLayers.Filter.Comparison({
@@ -313,7 +305,8 @@ $(document).ready(function () {
         var treeConfig = [
             {
                 id: "baselayers",
-                nodeType: "gx_baselayercontainer"
+                nodeType: "gx_baselayercontainer",
+                singleClickExpand: true
             }
         ], setMapExtent = function (settings) {
             if (typeof settings.extents !== "undefined") {
@@ -383,6 +376,7 @@ $(document).ready(function () {
                     treeConfig.push({
                         text: arr[i],
                         isLeaf: false,
+                        singleClickExpand: true,
                         expanded: false,
                         children: l.reverse()
                     });
@@ -432,14 +426,7 @@ $(document).ready(function () {
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                 Ext.getCmp('editlayerbutton').setDisabled(offline ? true : false);
                                 Ext.getCmp('quickdrawbutton').setDisabled(false);
-                            } else if (e.leaf !== true) {
-
-                                if (e.expanded) {
-                                    e.collapse();
-                                } else {
-                                    e.expand();
-                                }
-                            } else {
+                            }  else {
                                 Ext.getCmp('editlayerbutton').setDisabled(true);
                                 Ext.getCmp('quickdrawbutton').setDisabled(true);
                             }
@@ -450,7 +437,7 @@ $(document).ready(function () {
                                 filter.win = false;
                             }
                             $(".leaf-tools").empty();
-                            $("#" + id).html("<i class='icon-fullscreen btn-gc' style='cursor:pointer' id='ext-" + id + "'></i>");
+                            $("#" + id).html("<i class='fa fa-arrows-alt' style='cursor:pointer' id='ext-" + id + "'></i>");
                             currentId = e.id;
                             $("#style-" + id).on("click", function () {
                                 window.parent.Ext.getCmp("layerStylePanel").expand(true);
@@ -471,14 +458,7 @@ $(document).ready(function () {
                                         cloud.map.zoomToExtent([ext.xmin, ext.ymin, ext.xmax, ext.ymax]);
                                     },
                                     failure: function (response) {
-                                        Ext.MessageBox.show({
-                                            title: 'Failure',
-                                            msg: __(Ext.decode(response.responseText).message),
-                                            buttons: Ext.MessageBox.OK,
-                                            width: 400,
-                                            height: 300,
-                                            icon: Ext.MessageBox.ERROR
-                                        });
+                                        alert(__(Ext.decode(response.responseText).message));
                                     }
                                 });
                             });
@@ -574,14 +554,14 @@ $(document).ready(function () {
     wfsTools = [
         new GeoExt.Action({
             control: drawControl,
-            text: "<i class='icon-pencil btn-gc'></i> " + __(""),
+            text: "<i class='fa fa-pencil'></i> " + __(""),
             id: "editcreatebutton",
             disabled: true,
             enableToggle: true
         }),
         '-',
         {
-            text: "<i class='icon-trash btn-gc'></i> " + __(""),
+            text: "<i class='fa fa-cut'></i> " + __(""),
             id: "editdeletebutton",
             disabled: true,
             handler: function () {
@@ -599,7 +579,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-stop btn-gc'></i> " + __(""),
+            text: "<i class='fa fa-stop-circle'></i> " + __(""),
             disabled: true,
             id: "editstopbutton",
             handler: function () {
@@ -612,7 +592,7 @@ $(document).ready(function () {
         },
         '->',
         {
-            text: "<i class='icon-ok btn-gc'></i> " + __(""),
+            text: "<i class='fa fa-check'></i> " + __(""),
             disabled: true,
             id: "editsavebutton",
             handler: function () {
@@ -639,7 +619,7 @@ $(document).ready(function () {
         },
         '-',
         {
-            text: "<i class='icon-screenshot btn-gc'></i> " + __(" "),
+            text: "<i class='fa fa-location-arrow'></i> " + __(" "),
             handler: function () {
                 cloud.locate();
             }
@@ -804,21 +784,21 @@ $(document).ready(function () {
                                 items: [
                                     new Ext.grid.GridPanel({
                                         id: "notSynced",
-                                        title: "Not synced",
+                                        title: __("Not synced"),
                                         border: false,
                                         viewConfig: {
                                             forceFit: true
                                         },
                                         tbar: [
                                             {
-                                                text: "Reload",
+                                                text: "<i class='fa fa-refresh'></i> " + __("Reload"),
                                                 handler: function () {
                                                     loadArcivedData();
                                                 }
                                             },
                                             '->',
                                             {
-                                                text: "Sync",
+                                                text: "<i class='fa fa-arrow-circle-up'></i> " + __("Sync"),
                                                 handler: function () {
                                                     syncTransactions();
                                                 }
@@ -872,16 +852,16 @@ $(document).ready(function () {
                                     }),
                                     new Ext.grid.GridPanel({
                                         id: "synced",
-                                        title: "Synced",
+                                        title: __("Synced"),
                                         border: false,
                                         viewConfig: {
                                             forceFit: true
                                         },
                                         tbar: [
                                             {
-                                                text: "Delete all",
+                                                text: "<i class='fa fa-trash'></i> " + __("Delete all"),
                                                 handler: function () {
-                                                    if (confirm("You'll delete all synced records.")) {
+                                                    if (confirm(__("You'll delete all synced records."))) {
                                                         deleteSyncedTransactions();
                                                     } else {
                                                         return false;
@@ -1110,7 +1090,7 @@ $(document).ready(function () {
                                         title: "Layers",
                                         tbar: [
                                             {
-                                                text: "<i class='icon-edit btn-gc'></i> " + __("Start edit"),
+                                                text: "<i class='fa fa-pencil'></i> " + __("Start edit"),
                                                 id: "editlayerbutton",
                                                 disabled: true,
                                                 handler: function (thisBtn, event) {
@@ -1141,14 +1121,7 @@ $(document).ready(function () {
                                                     attributeForm.init(id[0] + "." + id[1], geomField);
                                                     quickDrawMode = false;
                                                     if (type === "GEOMETRY" || type === "RASTER") {
-                                                        Ext.MessageBox.show({
-                                                            title: 'No geometry type on layer',
-                                                            msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                            buttons: Ext.MessageBox.OK,
-                                                            width: 400,
-                                                            height: 300,
-                                                            icon: Ext.MessageBox.ERROR
-                                                        });
+                                                        alert(__("The layer has no geometry type. Set it in GC2 Admin"));
                                                     }
                                                     else {
                                                         var poll = function () {
@@ -1172,7 +1145,7 @@ $(document).ready(function () {
                                                 }
                                             },
                                             {
-                                                text: "<i class='icon-edit btn-gc'></i> " + __("Add feature"),
+                                                text: "<i class='fa fa-plus-square'></i> " + __("Add feature"),
                                                 id: "quickdrawbutton",
                                                 disabled: true,
                                                 handler: function () {
@@ -1182,14 +1155,8 @@ $(document).ready(function () {
                                                     var geomField = node.attributes.geomField;
                                                     var type = node.attributes.geomType;
                                                     if (type === "GEOMETRY" || type === "RASTER") {
-                                                        Ext.MessageBox.show({
-                                                            title: 'No geometry type on layer',
-                                                            msg: "The layer has no geometry type or type is GEOMETRY. You can set geom type for the layer in 'Settings' to the right.",
-                                                            buttons: Ext.MessageBox.OK,
-                                                            width: 400,
-                                                            height: 300,
-                                                            icon: Ext.MessageBox.ERROR
-                                                        });
+                                                        alert(__("The layer has no geometry type. Set it in GC2 Admin"));
+
                                                         return false;
                                                     }
                                                     else {
@@ -1792,14 +1759,7 @@ saveStrategy = new OpenLayers.Strategy.Save({
             } catch (e) {
             }
             message = "<p>Sorry, but something went wrong. The whole transaction is rolled back. Try to correct the problem and hit save again. You can look at the error below, maybe it will give you a hint about what's wrong</p><br/><textarea rows='5' cols='31'>" + error + "</textarea>";
-            Ext.MessageBox.show({
-                title: 'Failure',
-                msg: message,
-                buttons: Ext.MessageBox.OK,
-                width: 400,
-                height: 300,
-                icon: Ext.MessageBox.ERROR
-            });
+            alert(message);
         } else {
             saveStrategy.layer.refresh();
             format = new OpenLayers.Format.XML();
@@ -1888,9 +1848,9 @@ saveStrategy = new OpenLayers.Strategy.Save({
 // Function for adding thouch events to buttons for responsive feedback. Extjs3 isn't touch enabled.
 var addTouch = function () {
     $(".x-btn-small").on('touchstart', function (e) {
-        $(this).css("background-color", "#bbbbbb");
+        $(this).css("background-color", "#2E75B3");
     }).on('touchend', function (e) {
-        $(this).css("background-color", "#286090");
+        $(this).css("background-color", "#848482");
     });
 
     $(".x-combo-list-item").on('touchmove', function (e) {

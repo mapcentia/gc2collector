@@ -285,3 +285,26 @@ html,input, select, textarea, button, a {
 .image-textarea {
     display: none !important;
 }
+.x-tree-node-collapsed, .x-tree-node-expanded, .x-grid3-check-col-on, .x-grid3-check-col, .x-tool-collapse-west, .x-tool-collapse-east, .x-tool-collapse-south,
+.x-tool-expand-east, .x-tool-expand-west, .x-tool-expand-south, .x-window-dlg .ext-mb-question,.ext-mb-error, .x-tool {
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.x-tree-node-collapsed:before {
+    content: "\f196";
+}
+
+.x-tree-node-expanded:before {
+    content: "\f147";
+}
+.x-tree-node-icon {
+    display: none !important;
+}
+.x-tree-node-anchor span {
+    font: normal 16px 'Open Sans';
+
+}
+
