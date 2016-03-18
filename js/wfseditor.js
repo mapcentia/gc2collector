@@ -41,6 +41,7 @@ function getTransactionStore() {
     return indexedDb.transaction(["transactions"], "readwrite").objectStore("transactions");
 }
 
+
 OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3;
 Ext.BLANK_IMAGE_URL = "js/ext/resources/images/default/s.gif";
 Ext.QuickTips.init();
@@ -56,7 +57,74 @@ $(document).ready(function () {
     'use strict';
     var bl = null, vArr1, vArr2, altId, lName, LayerNodeUI, layers = {}, sketchSymbolizers, currentActiveIndex, cards,
         navHandler, cardSwitch, setState, loadArcivedData, syncTransactions, deleteSyncedTransactions, metaData, metaDataKeys = [],
-        metaDataKeysTitle = [], metaDataRealKeys = [], extent = null, gc2, clicktimer;
+        metaDataKeysTitle = [], metaDataRealKeys = [], extent = null, gc2, clicktimer, getConnectionInfo, online;
+
+    getConnectionInfo = function (cb) {
+        var d = new Date();
+        var freshUrl = 'online.txt?brk=' + d.getTime();
+
+        $.ajax({
+            url: freshUrl,
+            type: 'GET',
+            success: function (response) {
+                if (response === "0") {
+                    online = false;
+                    Ext.getCmp("connection-box").body.dom.innerHTML = 'Offline';
+                    cb("0");
+                } else {
+                    online = true;
+                    Ext.getCmp("connection-box").body.dom.innerHTML = 'Online';
+                    var checkUploadSpeed = function (iterations) {
+                        var average = 0,
+                            index = 0
+                        check();
+                        function check() {
+                            $(".fa-spin").show();
+                            var xhr = new XMLHttpRequest(),
+                                url = '?cache=' + Math.floor(Math.random() * 10000), //prevent url cache
+                                data = getRandomString(0.1), //1 meg POST size handled by all servers
+                                startTime,
+                                speed = 0;
+                            xhr.onreadystatechange = function (event) {
+                                if (xhr.readyState == 4) {
+                                    speed = Math.round(1024 / ( ( new Date() - startTime ) / 1000 ));
+                                    average == 0
+                                        ? average = speed
+                                        : average = Math.round(( average + speed ) / 2);
+                                    index++;
+                                    cb(speed, average, index);
+                                    $(".fa-spin").hide();
+                                }
+                            };
+                            xhr.open('POST', url, true);
+                            startTime = new Date();
+                            xhr.send(data);
+                        };
+
+                        function getRandomString(sizeInMb) {
+                            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!@#$%^&*()_+`-=[]\{}|;':,./<>?", //random data prevents gzip effect
+                                iterations = sizeInMb * 1024 * 1024, //get byte count
+                                result = '';
+                            for (var index = 0; index < iterations; index++) {
+                                result += chars.charAt(Math.floor(Math.random() * chars.length));
+                            }
+                            return result;
+                        };
+                    };
+                    checkUploadSpeed(1);
+                }
+                console.log(online);
+            }
+        });
+    }
+    var deafaultCb = function (speed, average, i) {
+        var txt = '' +
+            'speed: ' + speed + 'kbs<br>';
+        //'average: ' + average + 'kbs';
+        Ext.getCmp("speed-box").body.dom.innerHTML = txt;
+
+    }
+    getConnectionInfo(deafaultCb);
 
     cloud = new mygeocloud_ol.map(null, screenName, {
         controls: [
@@ -197,7 +265,7 @@ $(document).ready(function () {
                                                 border: false,
                                                 tbar: [
                                                     {
-                                                        text: "<i class='icon-pencil btn-gc'></i> Edit feature #" + pkeyValue,
+                                                        text: "<i class='fa fa-edit'></i> Edit feature #" + pkeyValue,
                                                         handler: function () {
                                                             if (geoType === "GEOMETRY" || geoType === "RASTER") {
                                                                 alert(__("The layer has no geometry type. Set it in GC2 Admin"));
@@ -426,7 +494,7 @@ $(document).ready(function () {
                             if (e.leaf === true && e.parentNode.id !== "baselayers") {
                                 Ext.getCmp('editlayerbutton').setDisabled(offline ? true : false);
                                 Ext.getCmp('quickdrawbutton').setDisabled(false);
-                            }  else {
+                            } else {
                                 Ext.getCmp('editlayerbutton').setDisabled(true);
                                 Ext.getCmp('quickdrawbutton').setDisabled(true);
                             }
@@ -600,8 +668,36 @@ $(document).ready(function () {
                     if (modifyControl.feature) {
                         modifyControl.selectControl.unselectAll();
                     }
-                    store.commitChanges();
-                    saveStrategy.save();
+                    if (offline === false) {
+                        var box = Ext.MessageBox.show({
+                            title: 'Checking speed',
+                            msg: "<i class=\"big fa fa-cog fa-spin\"></i>",
+                            width: (Ext.getBody().getViewSize().width - 15),
+                            height: 300,
+                            icon: Ext.MessageBox.QUESTION,
+                            closable: false
+                        });
+                        getConnectionInfo(function (speed, average, i) {
+                            if (speed < 200) {
+                                box.setIcon(Ext.MessageBox.ERROR);
+                                box.updateText("Bad connection. The new record is archived. Sync up when you've a better connection.")
+                                offline = true;
+                                setTimeout(function () {
+                                    box.hide()
+                                }, 4000)
+                            } else {
+                                setTimeout(function () {
+                                    box.hide()
+                                }, 1000)
+                            }
+                            store.commitChanges();
+                            saveStrategy.save();
+                            offline = false;
+                        });
+                    } else {
+                        store.commitChanges();
+                        saveStrategy.save();
+                    }
                 } else {
                     Ext.getCmp("mainTabs").activate(2);
                 }
@@ -917,7 +1013,7 @@ $(document).ready(function () {
                                     }
                                 },
                                 border: false,
-                                items: {
+                                items: [{
                                     xtype: "form",
                                     id: 'loginForm',
                                     border: false,
@@ -1006,15 +1102,45 @@ $(document).ready(function () {
 
                                                 }
                                             }
-                                        }/*,
-                                         {
-                                         text: "Check",
-                                         handler: function () {
-                                         applicationCache.update();
-                                         }
-                                         }*/
+                                        }
                                     ]
-                                }
+                                },
+                                    {
+                                        bodyStyle: 'padding: 10px 10px 0 10px;',
+                                        border: false,
+                                        items:[{
+                                            xtype: 'fieldset',
+                                            title: "Connection speed test <i class=\"small fa fa-cog fa-spin\"></i>",
+                                            defaults: {
+                                                style: {
+                                                    font: "normal 16px 'Open Sans'"
+                                                }
+                                            },
+                                            items: [{
+
+                                                id: "connection-box",
+                                                border: false,
+                                                html: ""
+                                            },
+                                                {
+
+                                                    id: "speed-box",
+                                                    border: false,
+                                                    html: ""
+                                                },{
+                                                    xtype: "box",
+                                                    height: 15
+                                                },
+                                                {
+                                                    xtype: 'button',
+                                                    text: __('Check'),
+                                                    handler: function () {
+                                                        getConnectionInfo(deafaultCb)
+                                                    }
+                                                }]
+                                        }]
+                                    }
+                                ]
                             }),
 
                             new Ext.grid.GridPanel({
@@ -1704,6 +1830,7 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
     // Add touch event to buttons, which wasn't rendered on app load.
     addTouch();
 }
+
 function stopEdit() {
     "use strict";
     layerBeingEditing = null;
@@ -1729,6 +1856,7 @@ function stopEdit() {
     }
     // Ext.getCmp("attrtable").collapse(true);
 }
+
 function array_unique(ar) {
     "use strict";
     var sorter = {}, out = [];
@@ -1742,6 +1870,7 @@ function array_unique(ar) {
     }
     return out || ar;
 }
+
 saveStrategy = new OpenLayers.Strategy.Save({
     onCommit: function (response) {
         var format, doc, error;

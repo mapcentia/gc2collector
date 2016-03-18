@@ -85,6 +85,7 @@ attributeForm.init = function (layer, geomtype) {
             id: "uploadpanel",
             frame: false,
             region: "center",
+            border: false,
             bodyStyle: {
                 background: '#ffffff',
                 padding: '7px'
@@ -112,7 +113,7 @@ attributeForm.init = function (layer, geomtype) {
             items: [filter.filterBuilder,
                 {
                     xtype: "button",
-                    text: "<i class='icon-ok btn-gc'></i> " + __("Load"),
+                    text: "<i class='fa fa-download'></i> " + __("Load"),
                     handler: function () {
                         Ext.getCmp("mainTabs").activate(1);
                         filter.queryPanel.query();
@@ -121,7 +122,7 @@ attributeForm.init = function (layer, geomtype) {
                 }]
         });
         filter.win = new Ext.Window({
-            title: __("Load features"),
+            title: "<i class='fa fa-download'></i> " + __("Load features"),
             modal: true,
             layout: 'fit',
             initCenter: true,
@@ -145,7 +146,6 @@ attributeForm.init = function (layer, geomtype) {
                 },
                 afterrender: {
                     fn: function (win) {
-                        win.setHeight($(window).height() - 40);
                         win.setWidth($(window).width() - 40);
                         win.center();
                     },

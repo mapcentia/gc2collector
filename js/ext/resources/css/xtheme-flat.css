@@ -574,7 +574,7 @@ table.x-btn-pressed {
 }
 
 .x-grid3-row td, .x-grid3-summary-row td {
-    font: normal 12px arial, tahoma, helvetica, sans-serif;
+    font: normal 12px 'Open Sans';
 }
 
 #schemaGrid .x-grid3-row td, .x-grid3-summary-row td {
@@ -1510,7 +1510,7 @@ a.x-menu-item {
 
 .x-window-tl .x-window-header {
     color: #fff;
-    font: normal 16px tahoma, arial, verdana, sans-serif;
+    font: normal 16px 'Open Sans';
 }
 
 .x-window-tc {
@@ -1547,7 +1547,7 @@ a.x-menu-item {
 
 .x-window-mc {
     border-color: #848482 /*Battleship Gray*/;
-    font: normal 11px tahoma, arial, helvetica, sans-serif;
+    font: normal 11px 'Open Sans';
     ba /
     ckground-color: #e8e8e8;
 }
@@ -1954,4 +1954,8 @@ ul.x-tab-strip-top {
 
 .leaf-tools i {
     margin-left: 3px;
+}
+.x-window-plain .x-window-mc {
+    background-color : #848482 !important /*Battleship Gray*/;
+    border-color: #848482/*Battleship Gray*/;
 }

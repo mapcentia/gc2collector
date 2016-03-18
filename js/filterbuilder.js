@@ -109,8 +109,8 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
                     },
                     scope: this
                 }
-            },
-            {
+            }
+           /* {
                 xtype: "fieldset",
                 title: __("Filter by attributes"),
                 checkboxToggle: true,
@@ -158,7 +158,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
                     },
                     scope: this
                 }
-            }
+            }*/
         ];
 
         this.addEvents(

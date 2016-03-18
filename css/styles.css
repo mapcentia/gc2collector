@@ -307,4 +307,56 @@ html,input, select, textarea, button, a {
     font: normal 16px 'Open Sans';
 
 }
+.fa-spin::before {
+    margin: 5px !important;
+}
+.big {
+    font-size: 30px !important;
 
+}
+
+.x-window-dlg .ext-mb-question {
+    background: none !important;
+    color: #ffffff;
+    font-size: 34px;
+}
+
+.x-window-dlg .ext-mb-question:before {
+    content: "\f059";
+}
+
+.x-window-dlg .ext-mb-error {
+    background: none !important;
+    color: #ffffff;
+    font-size: 34px;
+}
+
+.x-window-dlg .ext-mb-error:before {
+    content: "\f071";
+}
+
+.x-tool-close {
+    background: #ffffff !important;
+    color: #848482;
+}
+
+
+.x-tool-close-over {
+    background: red !important;
+    color: #ffffff;
+}
+
+.x-tool-close, .x-tool-close-over {
+    padding-left: 3px;
+    padding-top: 1px;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+.x-tool {
+    width: 22px;
+    height: 22px;
+
+}
+.x-tool-close:before,.x-tool-close-over:before {
+    content: "\f00d";
+}
