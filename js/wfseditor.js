@@ -79,26 +79,29 @@ $(document).ready(function () {
                             index = 0
                         check();
                         function check() {
-                            $(".fa-spin").show();
-                            var xhr = new XMLHttpRequest(),
-                                url = '?cache=' + Math.floor(Math.random() * 10000), //prevent url cache
-                                data = getRandomString(0.1), //1 meg POST size handled by all servers
-                                startTime,
+                            var startTime,
                                 speed = 0;
-                            xhr.onreadystatechange = function (event) {
-                                if (xhr.readyState == 4) {
+                            $(".fa-spin").show();
+                            startTime = new Date();
+
+                            $.ajax({
+                                url: '?cache=' + Math.floor(Math.random() * 10000), //prevent url cache
+                                type: 'POST',
+                                data: getRandomString(0.1), //1 meg POST size handled by all servers
+                                timeout: 10000,
+                                success: function () {
                                     speed = Math.round(1024 / ( ( new Date() - startTime ) / 1000 ));
                                     average == 0
                                         ? average = speed
                                         : average = Math.round(( average + speed ) / 2);
-                                    index++;
-                                    cb(speed, average, index);
+                                    cb(speed, average);
                                     $(".fa-spin").hide();
-                                }
-                            };
-                            xhr.open('POST', url, true);
-                            startTime = new Date();
-                            xhr.send(data);
+                                },
+                                error: function(){
+                                    $(".fa-spin").hide();
+                                    cb(1, 1);
+                                },
+                            })
                         };
 
                         function getRandomString(sizeInMb) {
@@ -119,7 +122,7 @@ $(document).ready(function () {
     }
     var deafaultCb = function (speed, average, i) {
         var txt = '' +
-            'speed: ' + speed + 'kbs<br>';
+            'speed: ' + (speed === 1 ? 'timeout' : speed + 'kbs') + '<br>';
         //'average: ' + average + 'kbs';
         Ext.getCmp("speed-box").body.dom.innerHTML = txt;
 
@@ -672,12 +675,13 @@ $(document).ready(function () {
                         var box = Ext.MessageBox.show({
                             title: 'Checking speed',
                             msg: "<i class=\"big fa fa-cog fa-spin\"></i>",
-                            width: (Ext.getBody().getViewSize().width - 15),
+                            width: (Ext.getBody().getViewSize().width - 55),
                             height: 300,
-                            icon: Ext.MessageBox.QUESTION,
+                            //icon: Ext.MessageBox.QUESTION,
                             closable: false
                         });
                         getConnectionInfo(function (speed, average, i) {
+                            console.log(Ext.MessageBox)
                             if (speed < 200) {
                                 box.setIcon(Ext.MessageBox.ERROR);
                                 box.updateText("Bad connection. The new record is archived. Sync up when you've a better connection.")
@@ -686,9 +690,11 @@ $(document).ready(function () {
                                     box.hide()
                                 }, 4000)
                             } else {
+                                box.setIcon(Ext.MessageBox.INFO);
+                                box.updateText("Good connection. The record is being send.")
                                 setTimeout(function () {
                                     box.hide()
-                                }, 1000)
+                                }, 3000)
                             }
                             store.commitChanges();
                             saveStrategy.save();
@@ -1108,7 +1114,7 @@ $(document).ready(function () {
                                     {
                                         bodyStyle: 'padding: 10px 10px 0 10px;',
                                         border: false,
-                                        items:[{
+                                        items: [{
                                             xtype: 'fieldset',
                                             title: "Connection speed test <i class=\"small fa fa-cog fa-spin\"></i>",
                                             defaults: {
@@ -1127,7 +1133,7 @@ $(document).ready(function () {
                                                     id: "speed-box",
                                                     border: false,
                                                     html: ""
-                                                },{
+                                                }, {
                                                     xtype: "box",
                                                     height: 15
                                                 },
@@ -1668,13 +1674,14 @@ function startWfsEdition(layerName, geomField, wfsFilter, single, timeSlice) {
             var count = layer.features.length;
             window.parent.App.setAlert(App.STATUS_NOTICE, count + " features loaded");
             if (layer.features.length > 0) {
-                map.zoomToExtent(layer.getDataExtent());
+                //map.zoomToExtent(layer.getDataExtent());
             }
             if (singleEditing) {
                 setTimeout(function () {
                     map.controls[map.controls.length - 1].selectControl.select(layer.features[0]);
                 }, 600);
                 singleEditing = false;
+                Ext.getCmp('editcreatebutton').toggle(false);
             }
         });
         layer.events.register("loadstart", layer, function () {
