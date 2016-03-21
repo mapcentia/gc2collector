@@ -212,7 +212,7 @@ $(document).ready(function () {
                             4891.96981025, 2445.98490513, 1222.99245256, 611.496226281, 305.748113141, 152.87405657,
                             76.4370282852, 38.2185141426, 19.1092570713, 9.55462853565, 4.77731426782, 2.38865713391,
                             1.19432856696, 0.597164283478, 0.298582141739, 0.149291];
-                        distance = 15 * res[cloud.getZoom()];
+                        distance = 20 * res[cloud.getZoom()];
                     }
                     qstore[index] = new geocloud.sqlStore({
                         db: db,
@@ -681,7 +681,6 @@ $(document).ready(function () {
                             closable: false
                         });
                         getConnectionInfo(function (speed, average, i) {
-                            console.log(Ext.MessageBox)
                             if (speed < 200) {
                                 box.setIcon(Ext.MessageBox.ERROR);
                                 box.updateText("Bad connection. The new record is archived. Sync up when you've a better connection.")
