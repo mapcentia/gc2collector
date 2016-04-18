@@ -2299,7 +2299,16 @@ GeoExt.form.recordToField = function (i, q) {
                     el.next().set({
                         "accept": "image/*"
                     });
-                    el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}));
+                    var resetBtn = el.insertSibling(new Ext.Element(document.createElement('button')).set({"style": "clear:both"})).update("Reset");
+                    var createImg = function(){
+                        el.insertSibling(new Ext.Element(document.createElement('img')).set({"style": "width:300px"}))
+                    }
+                    createImg();
+                    resetBtn.dom.onclick = function(){
+                        el.dom.value = "";
+                        resetBtn.next().remove();
+                        createImg();
+                    }
                     el.hide();
                 },
                 'fileselected': function (fb, v) {
