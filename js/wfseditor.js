@@ -461,6 +461,7 @@ $(document).ready(function () {
                 region: "center",
                 split: true,
                 autoScroll: true,
+                bodyStyle: 'padding: 3px',
                 root: {
                     text: 'Ext JS',
                     children: Ext.decode(new OpenLayers.Format.JSON().write(treeConfig.reverse(), true)),

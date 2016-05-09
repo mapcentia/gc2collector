@@ -364,7 +364,7 @@ ul.x-tab-strip-bottom {
 }
 
 table.x-btn-pressed {
-    background-color: #848482/*Battleship Gray*/;
+    background-color: #848482 /*Battleship Gray*/;
 }
 
 .x-btn-disabled * {
@@ -993,7 +993,7 @@ td.x-grid3-hd-over .x-grid3-hd-inner, td.sort-desc .x-grid3-hd-inner, td.sort-as
 
 .x-tree-node a span, .x-dd-drag-ghost a span {
     color: #000;
-    line-height: 25px;
+    line-height: 30px;
 }
 
 .x-tree-node .x-tree-node-disabled a span {
@@ -1896,6 +1896,7 @@ td.x-grid3-hd.x-grid3-cell {
 
 input.x-tree-node-cb {
     height: 27px;
+    margin-right: 5px;
 }
 
 .ext-strict .x-form-text {
@@ -1955,7 +1956,40 @@ ul.x-tab-strip-top {
 .leaf-tools i {
     margin-left: 3px;
 }
+
 .x-window-plain .x-window-mc {
-    background-color : #848482 !important /*Battleship Gray*/;
-    border-color: #848482/*Battleship Gray*/;
+    background-color: #848482 !important /*Battleship Gray*/;
+    border-color: #848482 /*Battleship Gray*/;
+}
+.x-tree-node-anchor span {
+}
+
+@media screen and (min-width: 480px) {
+    .x-btn button {
+        font-size: 24px;
+    }
+
+    .x-tab-strip span.x-tab-strip-text {
+        font-size: 24px;
+    }
+
+    .x-tree-node-anchor span {
+        font-size: 24px !important;
+    }
+
+    .x-tree-node a span, .x-dd-drag-ghost a span {
+        line-height: 40px;
+    }
+
+    .ext-strict .x-form-text {
+        height: 44px;
+    }
+
+    .x-form-field {
+        font-size: 24px;
+    }
+    input.x-tree-node-cb {
+        height: 35px;
+        margin-right: 10px;
+    }
 }
